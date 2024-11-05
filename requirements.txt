@@ -1,5 +1,9 @@
 gym
+numpy
 tensorflow
 keras
-numpy
 matplotlib
+pillow
+opencv-python
+pygame
+pyyaml
