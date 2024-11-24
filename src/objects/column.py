@@ -18,6 +18,9 @@ class Column(pygame.sprite.Sprite):
         self.pipe_bottom = self.sprite
         self.pipe_bottom_rect = self.pipe_bottom.get_rect(topleft=(0, self.sprite_rect.height + self.gap))
 
+        # Definiere die vertikale Position der Lücke
+        self.gap_y = random.randint(100, configs.SCREEN_HEIGHT - 100)
+        
         self.pipe_top = pygame.transform.flip(self.sprite, False, True)
         self.pipe_top_rect = self.pipe_top.get_rect(topleft=(0, 0))
 
