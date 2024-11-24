@@ -21,7 +21,9 @@ class FlappyBirdEnv(gym.Env):
 
         self.action_space = spaces.Discrete(2)  # 0 = keine Aktion, 1 = Fliegen
         self.observation_space = spaces.Box(
-            low=0, high=255, shape=(configs.SCREEN_HEIGHT, configs.SCREEN_WIDTH, 3), dtype=np.uint8
+            low=np.array([0, -np.inf, 0, 0], dtype=np.float32),
+            high=np.array([configs.SCREEN_HEIGHT, np.inf, configs.SCREEN_WIDTH, configs.SCREEN_HEIGHT], dtype=np.float32),
+            dtype=np.float32
         )
 
         assets.load_sprites()
@@ -31,6 +33,11 @@ class FlappyBirdEnv(gym.Env):
         self.bird, self.score = None, None
         self.clock = pygame.time.Clock()
 
+        # Schrittzähler und Säulenerstellungsintervall
+        self.step_count = 0
+        self.FPS = configs.FPS  # Stelle sicher, dass configs.FPS definiert ist
+        self.column_spawn_interval = int(1.5 * self.FPS)  # Alle 1,5 Sekunden
+
     def create_sprites(self):
         Background(0, self.sprites)
         Background(1, self.sprites)
@@ -39,27 +46,34 @@ class FlappyBirdEnv(gym.Env):
         return Bird(self.sprites), Score(self.sprites)
 
     def reset(self, seed=None, options=None):
-        """Setzt die Umgebung zurück und gibt die initiale Observation zurück."""
-        super().reset(seed=seed)  # Wichtig für Gymnasium-Konformität
+        super().reset(seed=seed)
         if seed is not None:
-            np.random.seed(seed)  # Falls Zufallszahlen im Spiel verwendet werden
+            np.random.seed(seed)
 
         self.sprites.empty()
         self.bird, self.score = self.create_sprites()
 
         self.gameover = False
         self.score.value = 0
+        self.step_count = 0  # Schrittzähler zurücksetzen
 
         return self._get_observation(), {}
 
     def step(self, action):
         if action == 1:
-            self.bird.flap = 0
-            self.bird.flap -= 6
+            self.bird.flap()
+
+        # Schrittzähler erhöhen
+        self.step_count += 1
+
+        # Überprüfe, ob es Zeit ist, eine neue Säule zu erstellen
+        if self.step_count % self.column_spawn_interval == 0:
+            Column(self.sprites)
+
+        # Spielzustand aktualisieren
         self.sprites.update()
 
-
-
+        # Kollision überprüfen
         if self.bird.check_collision(self.sprites):
             self.gameover = True
             reward = -18
@@ -68,27 +82,50 @@ class FlappyBirdEnv(gym.Env):
             reward = 2
             done = False
 
+        # Belohnung für das Passieren von Säulen
         for sprite in self.sprites:
             if isinstance(sprite, Column) and sprite.is_passed():
                 self.score.value += 1
                 reward += 7
                 assets.play_audio("point")
 
-        return self._get_observation(), reward, done, False, {}
+        observation = self._get_observation()
+        info = {}
+
+        return observation, reward, done, False, info
 
     def _get_observation(self):
-        screen_data = pygame.surfarray.array3d(self.screen)
-        return np.transpose(screen_data, (1, 0, 2))
+        bird_y = self.bird.rect.y
+        bird_velocity = self.bird.velocity
+
+        # Finde die nächste Säule
+        next_column = None
+        min_distance = float('inf')
+        for sprite in self.sprites:
+            if isinstance(sprite, Column):
+                distance = sprite.rect.x - self.bird.rect.x
+                if distance >= 0 and distance < min_distance:
+                    min_distance = distance
+                    next_column = sprite
+
+        if next_column is not None:
+            next_pipe_x = next_column.rect.x
+            next_pipe_y = next_column.gap_y
+        else:
+            next_pipe_x = configs.SCREEN_WIDTH
+            next_pipe_y = configs.SCREEN_HEIGHT / 2
+
+        observation = np.array([bird_y, bird_velocity, next_pipe_x, next_pipe_y], dtype=np.float32)
+        return observation
 
     def render(self, mode='human'):
         if self.render_mode == "human":
             self.screen.fill(0)
             self.sprites.draw(self.screen)
             pygame.display.flip()
-            pygame.event.pump()  # Pygame-Events verarbeiten
-            self.clock.tick(30)
+            pygame.event.pump()
+            self.clock.tick(self.FPS)
         else:
-            print("finished")
             pass
 
     def close(self):

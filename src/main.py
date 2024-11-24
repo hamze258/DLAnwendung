@@ -18,7 +18,6 @@ img = pygame.image.load(r'src\assets\icons\red_bird.png')
 pygame.display.set_icon(img)
 
 clock = pygame.time.Clock()
-column_create_event = pygame.USEREVENT
 running = True
 gameover = False
 gamestarted = False
@@ -28,6 +27,10 @@ assets.load_audios()
 
 sprites = pygame.sprite.LayeredUpdates()
 
+# Schrittzähler und Säulenerstellungsintervall
+step_count = 0
+FPS = configs.FPS
+column_spawn_interval = int(1.5 * FPS)  # Alle 1,5 Sekunden
 
 def create_sprites():
     """Create and return initial game sprites."""
@@ -41,22 +44,22 @@ def create_sprites():
 
 def reset_game():
     """Reset game state and all sprites."""
-    global bird, game_start_message, score, gameover, gamestarted
+    global bird, game_start_message, score, gameover, gamestarted, step_count
     gameover = False
     gamestarted = False
+    step_count = 0  # Schrittzähler zurücksetzen
     sprites.empty()
     bird, game_start_message, score = create_sprites()
-    pygame.time.set_timer(column_create_event, 0)  # Stop column spawning initially
 
 
 bird, game_start_message, score = create_sprites()
 
 while running:
+    step_count += 1  # Schrittzähler erhöhen
+
     for event in pygame.event.get():
         if event.type == pygame.QUIT:
             running = False
-        if event.type == column_create_event:
-            Column(sprites)
         if event.type == pygame.KEYDOWN:
             if event.key == pygame.K_SPACE:
                 if gameover:
@@ -64,32 +67,33 @@ while running:
                 elif not gamestarted:
                     gamestarted = True
                     game_start_message.kill()
-                    pygame.time.set_timer(column_create_event, 1500)  # Start column spawning
+                bird.handle_event(event)
 
-        if not gameover:
-            bird.handle_event(event)
+    if gamestarted and not gameover:
+        # Erstelle Säulen basierend auf dem Schrittzähler
+        if step_count % column_spawn_interval == 0:
+            Column(sprites)
+
+        sprites.update()
 
     screen.fill(0)
     sprites.draw(screen)
 
-    if gamestarted and not gameover:
-        sprites.update()
-
     # Check for collision only if the game is started and not over
-    if bird.check_collision(sprites) and not gameover:
-        gameover = True
-        gamestarted = False
-        GameOverMessage(sprites)
-        pygame.time.set_timer(column_create_event, 0)  # Stop column spawning
-        assets.play_audio("hit")
+    if gamestarted and not gameover:
+        if bird.check_collision(sprites):
+            gameover = True
+            gamestarted = False
+            GameOverMessage(sprites)
+            assets.play_audio("hit")
 
     # Handle scoring when columns are passed
     for sprite in sprites:
-        if type(sprite) is Column and sprite.is_passed():
+        if isinstance(sprite, Column) and sprite.is_passed():
             score.value += 1
             assets.play_audio("point")
 
     pygame.display.flip()
-    clock.tick(configs.FPS)
+    clock.tick(FPS)
 
 pygame.quit()

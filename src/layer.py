@@ -2,8 +2,8 @@ from enum import IntEnum, auto
 
 
 class Layer(IntEnum):
-    BACKGROUND = auto()
-    OBSTACLE = auto()
-    FLOOR = auto()
-    PLAYER = auto()
-    UI = auto()
+    BACKGROUND = 0
+    OBSTACLE = 2
+    FLOOR = 1
+    PLAYER = 3
+    UI = 4
