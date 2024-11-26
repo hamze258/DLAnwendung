@@ -79,7 +79,7 @@ class FlappyBirdEnv(gym.Env):
             reward = -1000
             done = True
         else:
-            reward = 0,5
+            reward = 0.5
             done = False
 
         # Belohnung für das Passieren von Säulen
