@@ -10,7 +10,6 @@ from objects.column import Column
 from objects.floor import Floor
 from objects.score import Score
 
-
 class FlappyBirdEnv(gym.Env):
     def __init__(self, render_mode=None):
         super(FlappyBirdEnv, self).__init__()
@@ -21,8 +20,8 @@ class FlappyBirdEnv(gym.Env):
 
         self.action_space = spaces.Discrete(2)  # 0 = keine Aktion, 1 = Fliegen
         self.observation_space = spaces.Box(
-            low=np.array([0, -np.inf, 0, 0], dtype=np.float32),
-            high=np.array([configs.SCREEN_HEIGHT, np.inf, configs.SCREEN_WIDTH, configs.SCREEN_HEIGHT], dtype=np.float32),
+            low=np.array([0,0, 0, -1, -1, 0, 0, -1], dtype=np.float32),
+            high=np.array([1,1, 1, 1, 1, 1, 1, 1], dtype=np.float32),
             dtype=np.float32
         )
 
@@ -33,10 +32,9 @@ class FlappyBirdEnv(gym.Env):
         self.bird, self.score = None, None
         self.clock = pygame.time.Clock()
 
-        # Schrittzähler und Säulenerstellungsintervall
         self.step_count = 0
-        self.FPS = configs.FPS  # Stelle sicher, dass configs.FPS definiert ist
-        self.column_spawn_interval = int(1.5 * self.FPS)  # Alle 1,5 Sekunden
+        self.FPS = configs.FPS
+        self.column_spawn_interval = int(1.5 * self.FPS)
 
     def create_sprites(self):
         Background(0, self.sprites)
@@ -55,7 +53,7 @@ class FlappyBirdEnv(gym.Env):
 
         self.gameover = False
         self.score.value = 0
-        self.step_count = 0  # Schrittzähler zurücksetzen
+        self.step_count = 0
 
         return self._get_observation(), {}
 
@@ -63,31 +61,15 @@ class FlappyBirdEnv(gym.Env):
         if action == 1:
             self.bird.flap()
 
-        # Schrittzähler erhöhen
         self.step_count += 1
 
-        # Überprüfe, ob es Zeit ist, eine neue Säule zu erstellen
         if self.step_count % self.column_spawn_interval == 0:
             Column(self.sprites)
 
-        # Spielzustand aktualisieren
         self.sprites.update()
 
-        # Kollision überprüfen
-        if self.bird.check_collision(self.sprites):
-            self.gameover = True
-            reward = -1000
-            done = True
-        else:
-            reward = 0,5
-            done = False
-
-        # Belohnung für das Passieren von Säulen
-        for sprite in self.sprites:
-            if isinstance(sprite, Column) and sprite.is_passed():
-                self.score.value += 1
-                reward += 5
-                assets.play_audio("point")
+        reward = self.calculate_reward()
+        done = self.gameover
 
         observation = self._get_observation()
         info = {}
@@ -95,27 +77,46 @@ class FlappyBirdEnv(gym.Env):
         return observation, reward, done, False, info
 
     def _get_observation(self):
-        bird_y = self.bird.rect.y
-        bird_velocity = self.bird.velocity
+        bird_y = self.bird.rect.y / configs.SCREEN_HEIGHT
+        bird_velocity = self.bird.velocity / 10
 
-        # Finde die nächste Säule
         next_column = None
         min_distance = float('inf')
         for sprite in self.sprites:
             if isinstance(sprite, Column):
                 distance = sprite.rect.x - self.bird.rect.x
-                if distance >= 0 and distance < min_distance:
+                if 0 <= distance < min_distance:
                     min_distance = distance
                     next_column = sprite
 
         if next_column is not None:
-            next_pipe_x = next_column.rect.x
-            next_pipe_y = next_column.gap_y
+            next_pipe_x = (next_column.rect.x - self.bird.rect.x) / configs.SCREEN_WIDTH
+            next_pipe_top_y = next_column.gap_y / configs.SCREEN_HEIGHT
+            next_pipe_bottom_y = (next_column.gap_y + next_column.gap) / configs.SCREEN_HEIGHT
         else:
-            next_pipe_x = configs.SCREEN_WIDTH
-            next_pipe_y = configs.SCREEN_HEIGHT / 2
+            next_pipe_x = 1.0
+            next_pipe_top_y = 0.5
+            next_pipe_bottom_y = 0.5
 
-        observation = np.array([bird_y, bird_velocity, next_pipe_x, next_pipe_y], dtype=np.float32)
+        gap_center_y = (next_pipe_top_y + next_pipe_bottom_y) / 2
+        distance_to_gap_center = bird_y - gap_center_y
+
+        if (next_pipe_bottom_y - next_pipe_top_y) != 0:
+            relative_velocity = bird_velocity / (next_pipe_bottom_y - next_pipe_top_y)
+        else:
+            relative_velocity = 1
+
+        observation = np.array([
+            bird_y,                     #Vertiakle Vogel Position
+            bird_velocity,              # Geschwindigkeit
+            next_pipe_x,               #Horizontale Röhrenposition
+            gap_center_y,              #Mitte der Lücke
+            distance_to_gap_center,    #Relative position zur Lücke
+            relative_velocity,         # Relative Geschwindigkeit
+            (next_pipe_top_y - bird_y), # Position zur oberen Kante
+            (bird_y - next_pipe_bottom_y) # Position zur unteren Kante
+        ], dtype=np.float32)
+
         return observation
 
     def render(self, mode='human'):
@@ -125,8 +126,28 @@ class FlappyBirdEnv(gym.Env):
             pygame.display.flip()
             pygame.event.pump()
             self.clock.tick(self.FPS)
-        else:
-            pass
+
+    def calculate_reward(self):
+        if self.bird.check_collision(self.sprites):
+            self.gameover = True
+            return -100
+
+        reward = 0.5 #Überleben
+
+        columns = [sprite for sprite in self.sprites if isinstance(sprite, Column)]
+
+        for sprite in self.sprites:
+            if isinstance(sprite, Column) and sprite.is_passed():
+                self.score.value += 1
+                reward +=2.5 + (self.score.value * 0.1)
+                #assets.play_audio("point")
+
+        for sprite in self.sprites:
+            if isinstance(sprite, Column) and sprite.is_fully_passed(self.bird.rect):
+                reward +=4.5 + (self.score.value * 0.1)
+                #assets.play_audio("point")
+
+        return reward
 
     def close(self):
         pygame.quit()
