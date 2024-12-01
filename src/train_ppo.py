@@ -4,7 +4,7 @@ from stable_baselines3.common.vec_env import DummyVecEnv
 from stable_baselines3.common.callbacks import EvalCallback, CheckpointCallback
 
 # Stelle sicher, dass du die FlappyBirdEnv-Klasse vorher definiert hast.
-from environment import FlappyBirdEnv  # Ersetze dies durch deinen Pfad, wenn die Env in einer anderen Datei liegt.
+from envs.environment import FlappyBirdEnv  # Ersetze dies durch deinen Pfad, wenn die Env in einer anderen Datei liegt.
 
 # Initialisiere die Umgebung
 env = FlappyBirdEnv()

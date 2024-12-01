@@ -10,7 +10,7 @@ from layer import Layer
 class Column(pygame.sprite.Sprite):
     def __init__(self, *groups):
         self._layer = Layer.OBSTACLE
-        self.gap = 110
+        self.gap = 150
 
         self.sprite = assets.get_sprite("pipe-green")
         self.sprite_rect = self.sprite.get_rect()

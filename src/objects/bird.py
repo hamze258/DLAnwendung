@@ -23,8 +23,6 @@ class Bird(pygame.sprite.Sprite):
         self.mask = pygame.mask.from_surface(self.image)
         self.velocity = 0  # Initialisiere die Geschwindigkeit des Vogels
 
-        self.flap = 0
-
 
     def update(self):
         self.images.insert(0, self.images.pop())
@@ -57,4 +55,7 @@ class Bird(pygame.sprite.Sprite):
                 return True
         return False
 
+    def flap(self):
+            self.velocity = -6
+            assets.play_audio("wing")
 

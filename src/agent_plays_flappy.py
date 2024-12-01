@@ -1,13 +1,13 @@
 from stable_baselines3.common.vec_env import DummyVecEnv
 from stable_baselines3 import PPO
-from environment import FlappyBirdEnv
+from envs.environment_image import FlappyBirdEnv
 import keyboard
 
 # Umgebung einpacken
 env = DummyVecEnv([lambda: FlappyBirdEnv(render_mode="human")])
 
 # Modell laden
-model = PPO.load("ppo_flappy_bird_final")
+model = PPO.load("flappy_bird_325000_steps")
 
 try:
     while True:  # Äußere Schleife für kontinuierliches Spielen
