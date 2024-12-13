@@ -37,7 +37,7 @@ model = PPO(
     "CnnPolicy",
     vec_env,
     verbose=1,
-    learning_rate=0.0003,
+    learning_rate=0.0002,
     n_steps=4096,
     batch_size=64,
     gae_lambda=0.95,
@@ -48,7 +48,7 @@ model = PPO(
 
 # Training
 model.learn(
-    total_timesteps=600000,
+    total_timesteps=1000000,
     callback=[eval_callback, checkpoint_callback],
 )
 

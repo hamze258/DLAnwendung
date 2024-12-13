@@ -6,7 +6,7 @@ audios = {}
 
 
 def load_sprites():
-    path = r"src/assets/sprites"
+    path = r"assets/sprites"
     for file in os.listdir(path):
         sprites[file.split('.')[0]] = pygame.image.load(os.path.join(path, file))
 
@@ -16,7 +16,7 @@ def get_sprite(name):
 
 
 def load_audios():
-    path = r"src/assets/audios"
+    path = r"assets/audios"
     for file in os.listdir(path):
         audios[file.split('.')[0]] = pygame.mixer.Sound(os.path.join(path, file))
 

@@ -20,8 +20,8 @@ class FlappyBirdEnv(gym.Env):
 
         self.action_space = spaces.Discrete(2)  # 0 = keine Aktion, 1 = Fliegen
         self.observation_space = spaces.Box(
-            low=np.array([0,-1, 0, -1, -1, 0, 0, -1], dtype=np.float32),
-            high=np.array([1,1, 1, 1, 1, 1, 1, 1], dtype=np.float32),
+            low=np.array([0,-1, 0, -1, -1], dtype=np.float32),
+            high=np.array([1,1, 1, 1, 1], dtype=np.float32),
             dtype=np.float32
         )
 
@@ -35,6 +35,12 @@ class FlappyBirdEnv(gym.Env):
         self.step_count = 0
         self.FPS = configs.FPS
         self.column_spawn_interval = int(1.5 * self.FPS)
+
+        #Metriken
+        self.highest_score = 0  # Höchster Score bisher
+        self.total_columns_passed = 0  # Alle Röhren insgesamt (für alle Episoden)
+        self.episode_columns_passed = 0  # Röhren in der aktuellen Episode
+        self.total_deaths = 0
 
     def create_sprites(self):
         Background(0, self.sprites)
@@ -54,6 +60,7 @@ class FlappyBirdEnv(gym.Env):
         self.gameover = False
         self.score.value = 0
         self.step_count = 0
+        self.episode_columns_passed = 0
 
         return self._get_observation(), {}
 
@@ -72,7 +79,11 @@ class FlappyBirdEnv(gym.Env):
         done = self.gameover
 
         observation = self._get_observation()
-        info = {}
+        info = {
+            "episode_columns_passed": self.episode_columns_passed,
+            "highest_score": self.highest_score,
+            "total_deaths": self.total_deaths
+        }
 
         return observation, reward, done, False, info
 
@@ -101,20 +112,12 @@ class FlappyBirdEnv(gym.Env):
         gap_center_y = (next_pipe_top_y + next_pipe_bottom_y) / 2
         distance_to_gap_center = bird_y - gap_center_y
 
-        if (next_pipe_bottom_y - next_pipe_top_y) != 0:
-            relative_velocity = bird_velocity / (next_pipe_bottom_y - next_pipe_top_y)
-        else:
-            relative_velocity = 1
-
         observation = np.array([
             bird_y,                     #Vertiakle Vogel Position
             bird_velocity,              # Geschwindigkeit
             next_pipe_x,               #Horizontale Röhrenposition
             gap_center_y,              #Mitte der Lücke
             distance_to_gap_center,    #Relative position zur Lücke
-            relative_velocity,         # Relative Geschwindigkeit
-            (next_pipe_top_y - bird_y), # Position zur oberen Kante
-            (bird_y - next_pipe_bottom_y) # Position zur unteren Kante
         ], dtype=np.float32)
 
         return observation
@@ -130,21 +133,22 @@ class FlappyBirdEnv(gym.Env):
     def calculate_reward(self):
         if self.bird.check_collision(self.sprites):
             self.gameover = True
-            return -100
+            self.total_deaths += 1
+            return -10
 
-        reward = 0.5 #Überleben
+
+        reward = 0.005 #Überleben
 
         columns = [sprite for sprite in self.sprites if isinstance(sprite, Column)]
 
         for sprite in self.sprites:
             if isinstance(sprite, Column) and sprite.is_passed():
                 self.score.value += 1
-                reward +=2.5 + (self.score.value * 0.1)
-                #assets.play_audio("point")
-
-        for sprite in self.sprites:
-            if isinstance(sprite, Column) and sprite.is_fully_passed(self.bird.rect):
-                reward +=4.5 + (self.score.value * 0.1)
+                self.total_columns_passed += 1
+                self.episode_columns_passed += 1
+                if self.score.value > self.highest_score:
+                    self.highest_score = self.score.value  # Aktualisiere höchsten Score
+                reward +=1
                 #assets.play_audio("point")
 
         return reward

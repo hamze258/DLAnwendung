@@ -16,12 +16,13 @@ class FlappyBirdEnv(gym.Env):
         super(FlappyBirdEnv, self).__init__()
 
         pygame.init()
+        self.n_frames = 4
         self.render_mode = render_mode
         self.screen = pygame.Surface((configs.SCREEN_WIDTH, configs.SCREEN_HEIGHT))  # Nur in-memory Surface
 
         # Bild-Observation-Space: Graustufenbilder mit einer festen Größe
         self.observation_space = spaces.Box(
-            low=0, high=255, shape=(84, 84, 1), dtype=np.uint8
+            low=0, high=255, shape=(84, 84, 4), dtype=np.uint8
         )
         self.action_space = spaces.Discrete(2)  # 0 = keine Aktion, 1 = Fliegen
 
@@ -45,36 +46,34 @@ class FlappyBirdEnv(gym.Env):
 
     def reset(self, seed=None, options=None):
         super().reset(seed=seed)
-        if seed is not None:
-            np.random.seed(seed)
-
         self.sprites.empty()
         self.bird, self.score = self.create_sprites()
-
         self.gameover = False
         self.score.value = 0
         self.step_count = 0
 
-        return self._get_observation(), {}
+        initial_observation = self._get_observation()
+        self.frame_buffer = np.repeat(initial_observation, self.n_frames, axis=-1)
+        return self.frame_buffer, {}
 
     def step(self, action):
         if action == 1:
             self.bird.flap()
 
         self.step_count += 1
-
         if self.step_count % self.column_spawn_interval == 0:
             Column(self.sprites)
 
         self.sprites.update()
-
         reward = self.calculate_reward()
         done = self.gameover
 
-        observation = self._get_observation()
-        info = {}
+        new_observation = self._get_observation()
+        self.frame_buffer = np.append(self.frame_buffer[:,:,1:], new_observation, axis=-1)
 
-        return observation, reward, done, False, info
+        info ={}
+
+        return self.frame_buffer, reward, done, False, info
 
     def _get_observation(self):
         """Konvertiere den aktuellen Spielstatus in ein Bild im Format (84, 84, 1)."""
@@ -104,15 +103,16 @@ class FlappyBirdEnv(gym.Env):
     def calculate_reward(self):
         if self.bird.check_collision(self.sprites):
             self.gameover = True
-            return -2
+            return -31
 
-        reward =  0.002 # Überleben
+        reward =  0.001
+        # Überleben
         
 
         for sprite in self.sprites:
             if isinstance(sprite, Column) and sprite.is_passed():
                 self.score.value += 1
-                reward += 0.5 
+                reward += 3
 
         return reward
 
