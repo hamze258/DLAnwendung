@@ -2,9 +2,9 @@ import random
 
 import pygame.sprite
 
-import assets
-import configs
-from layer import Layer
+import envs.objects.assets as assets
+import envs.configs as configs
+from envs.objects.layer import Layer
 
 
 class Column(pygame.sprite.Sprite):

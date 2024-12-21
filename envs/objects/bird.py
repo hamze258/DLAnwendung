@@ -1,10 +1,10 @@
 import pygame.sprite
 
-import assets
-import configs
-from layer import Layer
-from objects.column import Column
-from objects.floor import Floor
+from envs.objects import assets
+import envs.configs as configs
+from envs.objects.layer import Layer
+from envs.objects.column import Column
+from envs.objects.floor import Floor
 
 
 class Bird(pygame.sprite.Sprite):

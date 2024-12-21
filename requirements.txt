@@ -8,3 +8,5 @@ opencv-python
 pygame
 pyyaml
 torch
+stable_baselines3
+keyboard

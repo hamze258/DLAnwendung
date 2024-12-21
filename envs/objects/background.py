@@ -1,8 +1,8 @@
 import pygame.sprite
 
-import assets
-import configs
-from layer import Layer
+from envs.objects import assets
+import envs.configs as configs
+from envs.objects.layer import Layer
 
 
 class Background(pygame.sprite.Sprite):
