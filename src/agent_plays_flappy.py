@@ -7,7 +7,7 @@ import keyboard
 env = DummyVecEnv([lambda: FlappyBirdEnv(render_mode="human")])
 
 # Modell laden
-model = PPO.load("flappy_bird_325000_steps")
+model = PPO.load("ppo_flappy_bird_final.zip")
 
 try:
     while True:  # Äußere Schleife für kontinuierliches Spielen
