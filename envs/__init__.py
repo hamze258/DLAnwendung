@@ -1,2 +1,2 @@
-from .flappy_vector_env import FlappyVectorEnv
-from .flappy_image_env import FlappyImageEnv
+from .vector_env.flappy_vector_env import FlappyVectorEnv
+from .image_env.flappy_image_env import FlappyImageEnv
