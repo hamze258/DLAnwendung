@@ -7,3 +7,4 @@ pillow
 opencv-python
 pygame
 pyyaml
+torch
