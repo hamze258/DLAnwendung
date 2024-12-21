@@ -10,7 +10,7 @@ from layer import Layer
 class Column(pygame.sprite.Sprite):
     def __init__(self, *groups):
         self._layer = Layer.OBSTACLE
-        self.gap = 100
+        self.gap = 150
 
         self.sprite = assets.get_sprite("pipe-green")
         self.sprite_rect = self.sprite.get_rect()
@@ -37,6 +37,7 @@ class Column(pygame.sprite.Sprite):
         self.mask = pygame.mask.from_surface(self.image)
 
         self.passed = False
+        self.fully_passed = False
 
         super().__init__(*groups)
 
@@ -50,4 +51,13 @@ class Column(pygame.sprite.Sprite):
         if self.rect.x < 50 and not self.passed:
             self.passed = True
             return True
+        return False
+
+    def is_fully_passed(self, bird_rect):
+        # Röhre wurde bereits passiert
+        if self.passed and not self.fully_passed:
+            # Prüfe, ob der Vogel die Röhre vollständig verlassen hat
+            if bird_rect.left > self.rect.right:
+                self.fully_passed = True
+                return True
         return False

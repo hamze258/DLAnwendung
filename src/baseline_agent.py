@@ -3,7 +3,7 @@ import numpy as np
 import random
 
 # Importiere die FlappyBirdEnv-Klasse
-from environment import FlappyBirdEnv
+from envs.environment import FlappyBirdEnv
 
 def run_baseline_agent(env, episodes=10):
     for episode in range(episodes):

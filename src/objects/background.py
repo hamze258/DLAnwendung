@@ -8,7 +8,7 @@ from layer import Layer
 class Background(pygame.sprite.Sprite):
     def __init__(self, index, *groups):
         self._layer = Layer.BACKGROUND
-        self.image = assets.get_sprite("background")
+        self.image = assets.get_sprite("background-black")
         self.rect = self.image.get_rect(topleft=(configs.SCREEN_WIDTH * index, 0))
 
         super().__init__(*groups)
