@@ -19,7 +19,7 @@ def run_baseline_agent(env, episodes=10):
             next_pipe_y = obs[3]
 
             # Agentenlogik
-            if bird_y > next_pipe_y or next_pipe_x < 150:
+            if bird_y > next_pipe_y:
                 action = 1  # Flap
             else:
                 action = 0  # Nicht-Flap

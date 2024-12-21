@@ -75,8 +75,21 @@ class FlappyBirdEnv(gym.Env):
 
         self.sprites.update()
 
-        reward = self.calculate_reward()
-        done = self.gameover
+        # Kollision überprüfen
+        if self.bird.check_collision(self.sprites):
+            self.gameover = True
+            reward = -1000
+            done = True
+        else:
+            reward = 0.5
+            done = False
+
+        # Belohnung für das Passieren von Säulen
+        for sprite in self.sprites:
+            if isinstance(sprite, Column) and sprite.is_passed():
+                self.score.value += 1
+                reward += 5
+                assets.play_audio("point")
 
         observation = self._get_observation()
         info = {
