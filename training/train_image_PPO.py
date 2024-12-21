@@ -2,8 +2,7 @@ from stable_baselines3 import PPO
 from stable_baselines3.common.env_checker import check_env
 from stable_baselines3.common.vec_env import DummyVecEnv, VecTransposeImage
 from stable_baselines3.common.callbacks import EvalCallback, CheckpointCallback
-
-from envs.environment_image import FlappyBirdEnv
+from envs.image_env.flappy_image_env import FlappyBirdEnv
 
 # Initialisiere die Umgebung
 env = FlappyBirdEnv()
@@ -20,8 +19,8 @@ eval_env = VecTransposeImage(eval_env)
 # Callbacks
 eval_callback = EvalCallback(
     eval_env=eval_env,
-    best_model_save_path="./ppo_flappy_bird/",
-    log_path="./ppo_flappy_bird/",
+    best_model_save_path="models/PPO/",
+    log_path="logs/PPO/",
     eval_freq=5000,
     n_eval_episodes=5,
     deterministic=True,
@@ -29,7 +28,7 @@ eval_callback = EvalCallback(
 )
 
 checkpoint_callback = CheckpointCallback(
-    save_freq=25000, save_path="./ppo_checkpoints/", name_prefix="flappy_bird"
+    save_freq=25000, save_path="checkpoints/PPO/", name_prefix="flappy_bird"
 )
 
 # Modellinitialisierung
@@ -43,7 +42,7 @@ model = PPO(
     gae_lambda=0.95,
     gamma=0.99,
     clip_range=0.2,
-    tensorboard_log="./ppo_flappy_bird_tensorboard/",
+    tensorboard_log="tensorboard/PPO",
 )
 
 # Training

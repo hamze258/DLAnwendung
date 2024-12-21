@@ -4,7 +4,7 @@ from stable_baselines3.common.vec_env import DummyVecEnv
 from stable_baselines3.common.callbacks import EvalCallback, CheckpointCallback
 
 # Stelle sicher, dass du die FlappyBirdEnv-Klasse vorher definiert hast.
-from envs.environment import FlappyBirdEnv  # Ersetze dies durch deinen Pfad, wenn die Env in einer anderen Datei liegt.
+from envs.image_env.flappy_image_env import FlappyBirdEnv  # Ersetze dies durch deinen Pfad, wenn die Env in einer anderen Datei liegt.
 
 # Initialisiere die Umgebung
 env = FlappyBirdEnv()
@@ -18,8 +18,8 @@ vec_env = DummyVecEnv([lambda: FlappyBirdEnv()])
 # Callbacks zur besseren Trainingskontrolle
 eval_callback = EvalCallback(
     vec_env,
-    best_model_save_path="./ppo_flappy_bird/",
-    log_path="./ppo_flappy_bird/",
+    best_model_save_path="models/PPO/",
+    log_path="logs/PPO/",
     eval_freq=5000,
     n_eval_episodes=5,
     deterministic=True,
@@ -27,7 +27,7 @@ eval_callback = EvalCallback(
 )
 
 checkpoint_callback = CheckpointCallback(
-    save_freq=20000, save_path="./ppo_checkpoints/", name_prefix="flappy_bird"
+    save_freq=20000, save_path="checkpoints/PPO", name_prefix="flappy_bird"
 )
 
 # Initialisiere das PPO-Modell mit der Umgebung
@@ -41,7 +41,7 @@ model = PPO(
     gae_lambda=0.95,  # GAE Glättungsfaktor
     gamma=0.99,  # Discount-Faktor
     clip_range=0.2,  # Clipping-Faktor für PPO-Updates
-    tensorboard_log="./ppo_flappy_bird_tensorboard/",  # Tensorboard-Logs
+    tensorboard_log="tensorboard/PPO",  # Tensorboard-Logs
 )
 
 # Starte das Training
