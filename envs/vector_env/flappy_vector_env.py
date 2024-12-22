@@ -3,11 +3,10 @@ from gymnasium import spaces
 import numpy as np
 
 class FlappyVectorEnv(gym.Env):
-    def __init__(self, render_mode=None):
+    def __init__(self):
         super().__init__()
         # Action Space: 0 = No flap, 1 = Flap
         self.action_space = spaces.Discrete(2)
-        self.render_mode=render_mode
         
         # Beobachtungen: [bird_position, bird_velocity, pipe_distance, pipe_height]
         # Shape sollte (4,) sein, dtype float32

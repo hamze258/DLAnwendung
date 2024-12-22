@@ -1,10 +1,12 @@
 from stable_baselines3.common.vec_env import DummyVecEnv
 from stable_baselines3 import DQN
 from envs.vector_env.flappy_vector_env import FlappyVectorEnv
+from envs.vector_env.flappy_vector_env_render import FlappyVectorEnvWithRendering
 import keyboard
 
 # Umgebung einpacken
-env = DummyVecEnv([lambda: FlappyVectorEnv(render_mode="human")])
+env = DummyVecEnv([lambda: FlappyVectorEnv])
+# env = DummyVecEnv([lambda: FlappyVectorEnvWithRendering(render_mode="human")])
 
 # Modell laden
 
