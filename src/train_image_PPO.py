@@ -5,7 +5,7 @@ from stable_baselines3.common.callbacks import EvalCallback, CheckpointCallback
 
 from envs.environment_image import FlappyBirdEnv
 
-# Initialisiere die Umgebung
+#Initialisiere die Umgebung
 env = FlappyBirdEnv()
 check_env(env, warn=True)
 
