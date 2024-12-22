@@ -3,13 +3,13 @@ from gymnasium import spaces
 import pygame
 import numpy as np
 import cv2  # OpenCV für Bildverarbeitung
-import configs
+from envs import configs
 from envs.objects import assets
-from objects.background import Background
-from objects.bird import Bird
-from objects.column import Column
-from objects.floor import Floor
-from objects.score import Score
+from envs.objects.background import Background
+from envs.objects.bird import Bird
+from envs.objects.column import Column
+from envs.objects.floor import Floor
+from envs.objects.score import Score
 
 class FlappyBirdEnv(gym.Env):
     def __init__(self, render_mode=None):
