@@ -57,5 +57,5 @@ class Bird(pygame.sprite.Sprite):
 
     def flap(self):
             self.velocity = -6
-            assets.play_audio("wing")
+            #assets.play_audio("wing")
 

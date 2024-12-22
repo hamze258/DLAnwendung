@@ -38,6 +38,7 @@ model = PPO(
     vec_env,
     verbose=1,
     learning_rate=0.0002,
+    learning_rate=0.0002,
     n_steps=4096,
     batch_size=64,
     gae_lambda=0.95,

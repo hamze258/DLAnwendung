@@ -27,7 +27,7 @@ eval_callback = EvalCallback(
 )
 
 checkpoint_callback = CheckpointCallback(
-    save_freq=5000, save_path="./ppo_checkpoints/", name_prefix="flappy_bird"
+    save_freq=20000, save_path="./ppo_checkpoints/", name_prefix="flappy_bird"
 )
 
 # Initialisiere das PPO-Modell mit der Umgebung
@@ -35,7 +35,7 @@ model = PPO(
     "MlpPolicy",  # Verwende ein Multi-Layer-Perceptron (MLP) als Policy
     vec_env,
     verbose=1,
-    learning_rate=0.0003,  # Standard-Learning-Rate für PPO
+    learning_rate=0.0002,  # Standard-Learning-Rate für PPO
     n_steps=2048,  # Anzahl der Schritte pro Batch
     batch_size=64,  # Minibatchgröße
     gae_lambda=0.95,  # GAE Glättungsfaktor
@@ -46,8 +46,8 @@ model = PPO(
 
 # Starte das Training
 model.learn(
-    total_timesteps=1500000,  # Passe diese Zahl an deine Ressourcen an
-    callback=[eval_callback, checkpoint_callback],
+    total_timesteps=1000000,  # Passe diese Zahl an deine Ressourcen an
+    callback=[eval_callback, checkpoint_callback]
 )
 
 # Speichere das trainierte Modell
