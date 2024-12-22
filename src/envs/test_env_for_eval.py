@@ -25,7 +25,7 @@ class FlappyBirdEnv(gym.Env):
 
         # Bild-Observation-Space: Graustufenbilder mit einer festen Größe
         self.observation_space = spaces.Box(
-            low=0, high=255, shape=(64, 112, 4), dtype=np.uint8
+            low=0, high=255, shape=(144, 256, 4), dtype=np.uint8
         )
         self.action_space = spaces.Discrete(2)  # 0 = keine Aktion, 1 = Fliegen
 
@@ -37,6 +37,8 @@ class FlappyBirdEnv(gym.Env):
         self.clock = pygame.time.Clock()
 
         self.step_count = 0
+        self.flap_count = 0
+        self.notflap_count = 0
         self.FPS = configs.FPS
         self.column_spawn_interval = int(1.5 * self.FPS)
 
@@ -53,6 +55,8 @@ class FlappyBirdEnv(gym.Env):
         self.bird, self.score = self.create_sprites()
         self.gameover = False
         self.score.value = 0
+        self.flap_count = 0
+        self.notflap_count = 0
         self.step_count = 0
 
         initial_observation = self._get_observation()
@@ -63,10 +67,15 @@ class FlappyBirdEnv(gym.Env):
     def step(self, action):
         if action == 1:
             self.bird.flap()
+            self.flap_count = +1
+        else: 
+            self.notflap_count = +1
 
         self.step_count += 1
         if self.step_count % self.column_spawn_interval == 0:
             Column(self.sprites)
+
+        flaps = self.flap_count/self.notflap_count
 
         self.sprites.update()
         reward = self.calculate_reward()
@@ -75,7 +84,7 @@ class FlappyBirdEnv(gym.Env):
         new_observation = self._get_observation()
         self.frame_buffer = np.append(self.frame_buffer[:, :, 1:], new_observation, axis=-1)
 
-        info = {"score": self.score.value}
+        info = {"score": self.score.value, "flaps": flaps}
         return self.frame_buffer, reward, done, False, info
 
 
@@ -91,7 +100,7 @@ class FlappyBirdEnv(gym.Env):
         # Transponiere und skaliere das Bild
         pixels = np.transpose(pixels, (1, 0, 2))  # Von (W, H, C) nach (H, W, C)
         gray = cv2.cvtColor(pixels, cv2.COLOR_RGB2GRAY)  # Konvertiere zu Graustufen
-        resized = cv2.resize(gray, (112, 64), interpolation=cv2.INTER_AREA)  # Größe ändern
+        resized = cv2.resize(gray, (256, 144), interpolation=cv2.INTER_AREA)  # Größe ändern
 
         # Formatiere in (144, 256, 1)
         return resized[:, :, None].astype(np.uint8)
@@ -107,15 +116,15 @@ class FlappyBirdEnv(gym.Env):
     def calculate_reward(self):
         if self.bird.check_collision(self.sprites):
             self.gameover = True
-            return -1000
+            return -300
 
-        reward =  1 # Überleben
+        reward =  0.001 # Überleben
         
 
         for sprite in self.sprites:
             if isinstance(sprite, Column) and sprite.is_passed():
                 self.score.value += 1
-                reward += 10 
+                reward += 3 
 
         return reward
 
