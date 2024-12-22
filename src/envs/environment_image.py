@@ -101,7 +101,7 @@ class FlappyBirdEnv(gym.Env):
             screen = pygame.display.set_mode((configs.SCREEN_WIDTH, configs.SCREEN_HEIGHT))
             screen.blit(self.screen, (0, 0))
             pygame.display.flip()
-            self.clock.tick(self.FPS)  # Synchronisiere die Framerate
+            self.clock.tick(self.FPS)  #Synchronisiere die Framerate
 
 
     def calculate_reward(self):
