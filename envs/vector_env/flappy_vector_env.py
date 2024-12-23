@@ -1,3 +1,4 @@
+
 import gymnasium as gym
 from gymnasium import spaces
 import numpy as np
@@ -10,178 +11,179 @@ from envs.objects.column import Column
 from envs.objects.floor import Floor
 from envs.objects.score import Score
 
-
-class FlappyVectorEnv(gym.Env):
+class FlappyBirdEnv(gym.Env):
+    """Flappy Bird Environment for Reinforcement Learning."""
+    
+    metadata = {"render.modes": ["human", "rgb_array"]}
+    
     def __init__(self, render_mode=None):
-        super(FlappyVectorEnv, self).__init__()
+        super(FlappyBirdEnv, self).__init__()
+
+        pygame.init()
         self.render_mode = render_mode
+        self.screen = None
+        if self.render_mode == "human":
+            self.screen = pygame.display.set_mode((configs.SCREEN_WIDTH, configs.SCREEN_HEIGHT))
+            pygame.display.set_caption("Flappy Bird")
         
-        # -------------------- Action- und Observation-Space -------------------- #
-        self.action_space = spaces.Discrete(2)  # 0 = Keine Aktion, 1 = Flap
+        # Action space: 0 = do nothing, 1 = flap
+        self.action_space = spaces.Discrete(2)
+        
+        # Observation space:
+        # [bird_y, bird_velocity, next_pipe_x, next_pipe_top_y, next_pipe_bottom_y]
         self.observation_space = spaces.Box(
-            low=np.array([0, -10, 0, 0], dtype=np.float32),
-            high=np.array([500, 10, 500, 500], dtype=np.float32),
-            shape=(4,),
+            low=np.array([0, -10, 0, 0, 0], dtype=np.float32),
+            high=np.array([1, 10, 1, 1, 1], dtype=np.float32),
             dtype=np.float32
         )
 
-        self.max_steps = 1000
+        assets.load_sprites()
+        assets.load_audios()
 
-        # -------------------- Pygame nur 1x initialisieren -------------------- #
-        if not pygame.get_init():
-            pygame.init()
-            assets.load_sprites()
-            assets.load_audios()
-
-        # Da wir auch im Nicht-Human-Modus Sprites brauchen, legen wir sie IMMER an.
-        self.screen = pygame.Surface((configs.SCREEN_WIDTH, configs.SCREEN_HEIGHT))
         self.sprites = pygame.sprite.LayeredUpdates()
-
-        # Taktgeber und FPS (nur im Human-Modus nutzen wir das wirklich)
+        self.bird = None
+        self.score = None
         self.clock = pygame.time.Clock()
+
+        self.step_count = 0
         self.FPS = configs.FPS
         self.column_spawn_interval = int(1.5 * self.FPS)
 
-        # -------------------- Interne Variablen -------------------- #
-        self.step_count = 0
-        self.gameover = False
+        # Metrics
+        self.highest_score = 0
+        self.total_columns_passed = 0
+        self.episode_columns_passed = 0
+        self.total_deaths = 0
 
-        # Vektor-Variablen
-        self.bird_position = 250
-        self.bird_velocity = 0
-        self.pipe_distance = 200
-        self.pipe_height = 150
-
-        self.bird = None
-        self.score = None
-
-
-    def reset(self, seed=None, options=None):
-        super().reset(seed=seed)
-
-        # -------------------- Grundzustände -------------------- #
-        self.step_count = 0
-        self.gameover = False
-        self.bird_position = 250
-        self.bird_velocity = 0
-        self.pipe_distance = 200
-        self.pipe_height = 150
-
-        # Sprite-Gruppe leeren und neu erstellen (immer)
+    def create_sprites(self):
+        """Initializes all sprites for a new episode."""
         self.sprites.empty()
-        self.bird, self.score = self._create_sprites()
-        self.score.value = 0
-
-        # Erste Observation
-        observation = np.array([
-            self.bird_position,
-            self.bird_velocity,
-            self.pipe_distance,
-            self.pipe_height
-        ], dtype=np.float32)
-
-        return observation, {}
-
-
-    def _create_sprites(self):
-        """Erstellt Hintergrund, Boden, Bird, Score, usw. und fügt sie der Sprite-Gruppe hinzu."""
         Background(0, self.sprites)
         Background(1, self.sprites)
         Floor(0, self.sprites)
         Floor(1, self.sprites)
+        self.bird = Bird(self.sprites)
+        self.score = Score(self.sprites)
 
-        bird = Bird(self.sprites)
-        score = Score(self.sprites)
-        return bird, score
+    def reset(self, seed=None, options=None):
+        """Resets the environment to an initial state."""
+        super().reset(seed=seed)
+        if seed is not None:
+            np.random.seed(seed)
 
+        self.create_sprites()
+
+        self.gameover = False
+        self.score.value = 0
+        self.step_count = 0
+        self.episode_columns_passed = 0
+
+        return self._get_observation(), {}
 
     def step(self, action):
-        self.step_count += 1
-
-        # -------------------- Aktion ausführen (Flap oder nicht) -------------------- #
+        """Executes one time step within the environment."""
         if action == 1:
             self.bird.flap()
-            assets.play_audio("wing")
 
-        # Gravitation / Positionsupdate
-        self.bird_velocity += 1
-        self.bird_position += self.bird_velocity
+        self.step_count += 1
 
-        # Logische Pipe-Position
-        self.pipe_distance -= 5
-
-        # -------------------- Columns spawnen -------------------- #
-        # Wir spawnen Columns IMMER, damit die Kollisionslogik auch im Nicht-Human-Modus gilt.
+        # Spawn new column at intervals
         if self.step_count % self.column_spawn_interval == 0:
             Column(self.sprites)
 
-        # -------------------- Sprite-Update (inkl. Boden, Animation) -------------------- #
-        # Bird-Position in Pygame-Sprite übertragen
-        if self.bird is not None:
-            self.bird.rect.centery = int(self.bird_position)
-
-        # Aktualisiere alle Sprites (verschiebt Columns etc.)
+        # Update all sprites
         self.sprites.update()
 
-        # -------------------- Reward-Logik -------------------- #
-        # Kleiner Bonus fürs Überleben
-        reward = 0.1
+        # Handle events if rendering in human mode
+        if self.render_mode == "human":
+            self._handle_pygame_events()
 
-        # Pipe passiert? => Reset pipe_distance & Bonus
-        if self.pipe_distance <= 0:
-            self.pipe_distance = 200
-            self.pipe_height = np.random.randint(100, 400)
-            reward += 1.0
-            self.score.value += 1
+        # Check for collisions
+        done = False
+        reward = 0.1  # Small reward for surviving this step
 
-        terminated = False
-        truncated = False
-
-        # -------------------- Kollisionscheck (auch im Nicht-Human-Modus!) -------------------- #
-        # Falls Bird None ist, kann check_collision() crashen, 
-        # aber in unserem Code legen wir bird immer an => safe.
         if self.bird.check_collision(self.sprites):
-            terminated = True
             self.gameover = True
-            reward = -1 # Strafe für Kollision
-        elif self.bird_position < 0 or self.bird_position > 500:
-            terminated = True
-            self.gameover = True
-            reward = -1 # Strafe für Kollision
+            done = True
+            reward = -1
+            self.total_deaths += 1
+            assets.play_audio("hit")
+        else:
+            # Check for passing columns
+            for sprite in self.sprites:
+                if isinstance(sprite, Column) and sprite.is_passed() and not sprite.passed:
+                    sprite.passed = True
+                    self.score.value += 1
+                    self.total_columns_passed += 1
+                    self.episode_columns_passed += 1
+                    if self.score.value > self.highest_score:
+                        self.highest_score = self.score.value
+                    reward += 1  # Reward for passing a column
+                    assets.play_audio("point")
 
-        # Zeitlimit
-        if self.step_count >= self.max_steps:
-            truncated = True
+        observation = self._get_observation()
+        info = {
+            "episode_columns_passed": self.episode_columns_passed,
+            "highest_score": self.highest_score,
+            "total_deaths": self.total_deaths
+        }
 
-        # -------------------- Nächste Observation -------------------- #
+        return observation, reward, done, False, info
+
+    def _get_observation(self):
+        """Constructs the observation from the current game state."""
+        bird_y = self.bird.rect.centery / configs.SCREEN_HEIGHT
+        bird_velocity = self.bird.velocity / 10  # Normalize velocity
+
+        # Find the next column
+        next_column = None
+        min_distance = float('inf')
+        for sprite in self.sprites:
+            if isinstance(sprite, Column):
+                distance = sprite.rect.x - self.bird.rect.x
+                if 0 <= distance < min_distance:
+                    min_distance = distance
+                    next_column = sprite
+
+        if next_column:
+            next_pipe_x = distance / configs.SCREEN_WIDTH
+            next_pipe_top_y = next_column.gap_y / configs.SCREEN_HEIGHT
+            next_pipe_bottom_y = (next_column.gap_y + next_column.gap) / configs.SCREEN_HEIGHT
+        else:
+            next_pipe_x = 1.0
+            next_pipe_top_y = 0.5
+            next_pipe_bottom_y = 0.5
+
         observation = np.array([
-            self.bird_position,
-            self.bird_velocity,
-            self.pipe_distance,
-            self.pipe_height
+            bird_y,                     # Vertikale Vogelposition
+            bird_velocity,             # Geschwindigkeit
+            next_pipe_x,               # Horizontale Röhrenposition
+            next_pipe_top_y,           # Oberes Ende der Lücke
+            next_pipe_bottom_y         # Unteres Ende der Lücke
         ], dtype=np.float32)
 
-        return observation, reward, terminated, truncated, {}
+        return observation
 
-
-    def render(self):
-        """Zeichnet die Umgebung auf den Bildschirm, aber nur, wenn render_mode=='human'."""
+    def render(self, mode='human'):
+        """Renders the environment."""
         if self.render_mode == "human":
-            screen = pygame.display.set_mode((configs.SCREEN_WIDTH, configs.SCREEN_HEIGHT))
-            self.screen.fill((0, 0, 0))
-
-            # Alle Sprites auf In-Memory-Surface zeichnen
+            self.screen.fill((0, 0, 0))  # Fill with black or another background color
             self.sprites.draw(self.screen)
-
-            # Übertragen auf das eigentliche Fenster
-            screen.blit(self.screen, (0, 0))
             pygame.display.flip()
-
-            # Im Nicht-Human-Modus NICHT verlangsamen
             self.clock.tick(self.FPS)
+        elif mode == "rgb_array":
+            # Return an RGB array of the current screen
+            if self.screen:
+                return pygame.surfarray.array3d(self.screen)
 
+    def _handle_pygame_events(self):
+        """Handles Pygame events to prevent the window from becoming unresponsive."""
+        for event in pygame.event.get():
+            if event.type == pygame.QUIT:
+                pygame.quit()
+                exit()
 
     def close(self):
-        """Pygame beenden (optional)."""
+        """Performs any necessary cleanup."""
         if self.render_mode == "human":
             pygame.quit()
