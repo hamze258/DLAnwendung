@@ -1,3 +1,4 @@
+#main.py
 import pygame
 
 from envs.objects import assets
