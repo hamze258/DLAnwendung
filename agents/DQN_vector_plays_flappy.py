@@ -1,11 +1,11 @@
 #DQN_vector_plays_flappy.py
 from stable_baselines3.common.vec_env import DummyVecEnv
 from stable_baselines3 import DQN
-from envs.vector_env.flappy_vector_env import FlappyVectorEnv
+from envs.vector_env.flappy_vector_env import FlappyBirdEnv
 import keyboard
 
 # Wrappen im VecEnv
-env = DummyVecEnv([lambda: FlappyVectorEnv(render_mode="human")])
+env = DummyVecEnv([lambda: FlappyBirdEnv(render_mode="human")])
 
 # Gelerntes Modell laden
 model = DQN.load(r"models\DQN\best_model.zip")
