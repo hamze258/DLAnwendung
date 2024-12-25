@@ -4,7 +4,7 @@ from stable_baselines3.common.vec_env import DummyVecEnv, VecTransposeImage
 from stable_baselines3.common.callbacks import EvalCallback, CheckpointCallback
 from envs.image_env.flappy_image_env import FlappyBirdEnv
 
-# Initialisiere die Umgebung
+#Initialisiere die Umgebung
 env = FlappyBirdEnv()
 check_env(env, warn=True)
 
@@ -37,6 +37,7 @@ model = PPO(
     vec_env,
     verbose=1,
     learning_rate=0.0002,
+    learning_rate=0.0002,
     n_steps=4096,
     batch_size=64,
     gae_lambda=0.95,
@@ -47,9 +48,11 @@ model = PPO(
 
 # Training
 model.learn(
-    total_timesteps=1000000,
+    total_timesteps=3000000,
     callback=[eval_callback, checkpoint_callback],
 )
 
 # Speichern
 model.save("ppo_flappy_bird_final")
+
+#Ab PPO10, habe ich angefangen mit resize 144 zu trainieren
