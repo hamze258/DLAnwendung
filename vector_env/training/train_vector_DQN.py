@@ -4,19 +4,19 @@ from stable_baselines3.common.vec_env import SubprocVecEnv
 from stable_baselines3.common.callbacks import EvalCallback, CheckpointCallback, BaseCallback
 import torch
 import numpy as np
-from envs.vector_env.flappy_vector_env import FlappyVectorEnv
+from src.flappy import Flappy
 from stable_baselines3.common.vec_env import VecTransposeImage
 
 
 
 if __name__ == "__main__":
     # 1. Umgebung initialisieren und überprüfen
-    env = FlappyVectorEnv()
+    env = Flappy()
     check_env(env, warn=True)
 
 # Train and Eval Environments müssen konsistent sein
-    vec_env = SubprocVecEnv([lambda: FlappyVectorEnv()])
-    eval_env = SubprocVecEnv([lambda: FlappyVectorEnv()])
+    vec_env = SubprocVecEnv([lambda: Flappy()])
+    eval_env = SubprocVecEnv([lambda: Flappy()])
 
     # Benutzerdefinierter Callback für detailliertes Logging
     class DetailedMetricsCallback(BaseCallback):
@@ -81,8 +81,8 @@ if __name__ == "__main__":
 
     checkpoint_callback = CheckpointCallback(
         save_freq=50000,  # Weniger häufig speichern, um Platz zu sparen
-        save_path="checkpoints/DQN/", 
-        name_prefix="flappy_bird_vec"
+        save_path="models/checkpoints/DQN/", 
+        name_prefix="DQN_Flappy_Bird"
     )
 
     # 6. Dynamische GPU- oder CPU-Auswahl
@@ -118,4 +118,4 @@ if __name__ == "__main__":
     )
 
     # 10. Modell speichern
-    model.save("dqn_flappy_bird_final")
+    model.save("models/DQN/Flappy_Bird_DQN")
