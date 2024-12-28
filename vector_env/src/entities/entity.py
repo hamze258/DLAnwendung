@@ -78,6 +78,6 @@ class Entity:
                 ),
             )
 
-    def draw(self):
-        if self.config.screen:  # Nur zeichnen, wenn ein Bildschirm vorhanden ist
+    def draw(self) -> None:
+        if self.image:
             self.config.screen.blit(self.image, self.rect)

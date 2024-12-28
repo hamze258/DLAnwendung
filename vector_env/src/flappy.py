@@ -18,29 +18,18 @@ from .utils import GameConfig, Images, Sounds, Window
 
 
 class Flappy:
-    def __init__(self, render=True):
+    def __init__(self):
         pygame.init()
-        self.render = render
-
-        # Initialisiere immer ein Fensterobjekt, auch wenn es nicht angezeigt wird
-        self.window = Window(288, 512)
-
-        if self.render:
-            pygame.display.set_caption("Flappy Bird")
-            window = Window(288, 512)
-            screen = pygame.display.set_mode((window.width, window.height))
-        else:
-            # Dummy-Display für headless Betrieb
-            pygame.display.set_mode((1, 1), pygame.HIDDEN)
-            screen = None
-
+        pygame.display.set_caption("Flappy Bird")
+        window = Window(288, 512)
+        screen = pygame.display.set_mode((window.width, window.height))
         images = Images()
 
         self.config = GameConfig(
-            screen=screen if self.render else None,  # Kein Bildschirm bei deaktiviertem Rendering
+            screen=screen,
             clock=pygame.time.Clock(),
             fps=30,
-            window=self.window,
+            window=window,
             images=images,
             sounds=Sounds(),
         )
@@ -74,8 +63,7 @@ class Flappy:
             self.player.tick()
             self.welcome_message.tick()
 
-            if self.render:
-                pygame.display.update()
+            pygame.display.update()
             await asyncio.sleep(0)
             self.config.tick()
 
@@ -100,12 +88,10 @@ class Flappy:
 
         while True:
             if self.player.collided(self.pipes, self.floor):
-                print(f"Game Over! Score: {self.score}")
                 return
 
             for i, pipe in enumerate(self.pipes.upper):
                 if self.player.crossed(pipe):
-                    print(f"Pipe crossed! Current score: {self.score}")
                     self.score.add()
 
             for event in pygame.event.get():
@@ -119,14 +105,7 @@ class Flappy:
             self.score.tick()
             self.player.tick()
 
-            self.frame_count += 1
-            if self.frame_count % 100 == 0:  # Alle 100 Frames den Fortschritt ausgeben
-                print(f"Frames: {self.frame_count}, Score: {self.score}")
-
-            #rendering bei spielen oder nicht
-            if self.render:
-                pygame.display.update()
-
+            pygame.display.update()
             await asyncio.sleep(0)
             self.config.tick()
 
@@ -152,6 +131,5 @@ class Flappy:
             self.game_over_message.tick()
 
             self.config.tick()
-            if self.render:
-                pygame.display.update()
+            pygame.display.update()
             await asyncio.sleep(0)

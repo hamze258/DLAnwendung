@@ -129,8 +129,7 @@ class Player(Entity):
     def draw_player(self) -> None:
         rotated_image = pygame.transform.rotate(self.image, self.rot)
         rotated_rect = rotated_image.get_rect(center=self.rect.center)
-        if self.config.screen:
-            self.config.screen.blit(rotated_image, rotated_rect)
+        self.config.screen.blit(rotated_image, rotated_rect)
 
     def stop_wings(self) -> None:
         self.img_gen = cycle([self.img_idx])

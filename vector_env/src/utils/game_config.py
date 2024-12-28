@@ -25,5 +25,9 @@ class GameConfig:
         self.sounds = sounds
         self.debug = os.environ.get("DEBUG", False)
 
+     # Bildschirmparameter hinzufügen
+        self.SCREEN_WIDTH = screen.get_width()
+        self.SCREEN_HEIGHT = screen.get_height()
+
     def tick(self) -> None:
         self.clock.tick(self.fps)
