@@ -41,7 +41,7 @@ class FlappyBirdEnv(gym.Env):
         self.action_space = spaces.Discrete(2)  # 0 = do nothing, 1 = flap
         self.observation_space = spaces.Box(
             low=np.array([0, -10, 0, 0, 0], dtype=np.float32),
-            high=np.array([1, 10, 1, 1, 1], dtype=np.float32),
+            high=np.array([1, 10, 2, 2, 2], dtype=np.float32),  # Increased upper bounds
             dtype=np.float32
         )
 
@@ -84,25 +84,26 @@ class FlappyBirdEnv(gym.Env):
         
 
         # Debugging-Ausgaben
-        print(f"Step: {self.step_count}")
-        print(f"Score: {self.score.score}")
-        print(f"Player Position: ({self.player.x}, {self.player.y})")
-        print(f"Number of Pipes: Upper - {len(self.pipes.upper)}, Lower - {len(self.pipes.lower)}")
-        if len(self.pipes.upper) > 0:
-            print(f"First Pipe Position: Upper ({self.pipes.upper[0].x}, {self.pipes.upper[0].y}), "
-                f"Lower ({self.pipes.lower[0].x}, {self.pipes.lower[0].y})")
+        #print(f"Step: {self.step_count}")
+        
+        #print(f"Player Position: ({self.player.x}, {self.player.y})")
+        #print(f"Number of Pipes: Upper - {len(self.pipes.upper)}, Lower - {len(self.pipes.lower)}")
+        # if len(self.pipes.upper) > 0:
+        #     print(f"First Pipe Position: Upper ({self.pipes.upper[0].x}, {self.pipes.upper[0].y}), "
+        #         f"Lower ({self.pipes.lower[0].x}, {self.pipes.lower[0].y})")
 
         # Kollision prüfen
         reward = 0.1  # Kleine Belohnung für Überleben
         if self.player.collided(self.pipes, self.floor):
-            print("Kollision erkannt!")
+            #print("Kollision erkannt!")
             self.gameover = True
             reward = -1
+            print(f"Score: {self.score.score}")
 
         # Punkte erhöhen, wenn Pipes passiert werden
         for pipe in self.pipes.lower:
             if not pipe.scored and pipe.cx < self.player.cx:
-                print("Pipe passiert!")
+                #print("Pipe passiert!")
                 self.score.add()
                 reward += 1.0  # Belohnung für das Passieren einer Pipe
                 pipe.scored = True  # Markiere die Pipe als gezählt
@@ -118,11 +119,11 @@ class FlappyBirdEnv(gym.Env):
         return observation, reward, done, False, info
 
     def _get_observation(self):
-        """Beobachtung basierend auf dem Spielzustand erstellen."""
+        """Create an observation based on the current game state."""
         bird_y = self.player.y / self.config.window.viewport_height
         bird_velocity = self.player.vel_y / 10
 
-        # Finde die nächste Pipe
+        # Find the next pipe
         next_pipe = None
         min_distance = float('inf')
 
@@ -138,11 +139,26 @@ class FlappyBirdEnv(gym.Env):
             next_pipe_top_y = upper_pipe.y / self.config.window.viewport_height
             next_pipe_bottom_y = lower_pipe.y / self.config.window.viewport_height
         else:
-            next_pipe_x = 1.0
-            next_pipe_top_y = 0.5
-            next_pipe_bottom_y = 0.5
+            next_pipe_x = 2.0  # Adjusted to match the new upper bound
+            next_pipe_top_y = 1.0  # Adjusted to be within bounds
+            next_pipe_bottom_y = 1.0  # Adjusted to be within bounds
 
-        return np.array([bird_y, bird_velocity, next_pipe_x, next_pipe_top_y, next_pipe_bottom_y], dtype=np.float32)
+        # **Ensure all observation values are within bounds**
+        bird_y = np.clip(bird_y, 0.0, 1.0)
+        bird_velocity = np.clip(bird_velocity, -10.0, 10.0)
+        next_pipe_x = np.clip(next_pipe_x, 0.0, 2.0)
+        next_pipe_top_y = np.clip(next_pipe_top_y, 0.0, 2.0)
+        next_pipe_bottom_y = np.clip(next_pipe_bottom_y, 0.0, 2.0)
+
+        observation = np.array([bird_y, bird_velocity, next_pipe_x, next_pipe_top_y, next_pipe_bottom_y], dtype=np.float32)
+
+        # **Debugging: Print observation values**
+        #print(f"Observation: {observation}")
+
+        # **Ensure observation is within bounds**
+        assert self.observation_space.contains(observation), f"Observation out of bounds: {observation}"
+
+        return observation
 
     def render(self):
         """Das Spiel rendern basierend auf dem angegebenen Modus."""
