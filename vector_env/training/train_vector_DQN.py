@@ -1,22 +1,26 @@
 from stable_baselines3 import DQN
 from stable_baselines3.common.env_checker import check_env
-from stable_baselines3.common.vec_env import SubprocVecEnv
+from stable_baselines3.common.vec_env import SubprocVecEnv, DummyVecEnv
 from stable_baselines3.common.callbacks import EvalCallback, CheckpointCallback, BaseCallback
 import torch
 import numpy as np
-from src.flappy import Flappy
+from vector_env.agents.flappy_vector_env import FlappyBirdEnv
 from stable_baselines3.common.vec_env import VecTransposeImage
 
 
 
 if __name__ == "__main__":
+
+    if torch.cuda.is_available():
+        print("Aktuelles Gerät:", torch.cuda.current_device())
+        print("Gerätename:", torch.cuda.get_device_name(torch.cuda.current_device()))
     # 1. Umgebung initialisieren und überprüfen
-    env = Flappy()
+    env = FlappyBirdEnv()
     check_env(env, warn=True)
 
 # Train and Eval Environments müssen konsistent sein
-    vec_env = SubprocVecEnv([lambda: Flappy()])
-    eval_env = SubprocVecEnv([lambda: Flappy()])
+    vec_env = DummyVecEnv([lambda: FlappyBirdEnv()])
+    eval_env = DummyVecEnv([lambda: FlappyBirdEnv()])
 
     # Benutzerdefinierter Callback für detailliertes Logging
     class DetailedMetricsCallback(BaseCallback):
@@ -71,7 +75,7 @@ if __name__ == "__main__":
     eval_callback = EvalCallback(
         eval_env=eval_env,
         best_model_save_path="models/DQN/",
-        log_path="logs/DQN/",
+        log_path="vector_env\logs\DQN",
         eval_freq=10000,  # Erhöht die Evaluationshäufigkeit für besseres Monitoring
         n_eval_episodes=10,  # Mehr Episoden für aussagekräftige Evaluation
         deterministic=True,
@@ -93,17 +97,17 @@ if __name__ == "__main__":
         policy="MlpPolicy",
         env=vec_env,
         verbose=1,
-        learning_rate=1e-4,  # Typischer Wert, bereits passend
-        buffer_size=200000,  # Erhöhter Replay-Speicher für komplexeres Lernen
+        learning_rate=5e-4,  
+        buffer_size=100000,  
         learning_starts=10000,
-        batch_size=64,  # Größere Batches für stabileres Training
-        tau=1.0,  # Standardwert für weiches Update, passt zu DQN
-        gamma=0.99,  # Diskontierungsfaktor bleibt gleich
-        train_freq=(1, "step"),  # Trainiert nach jedem Schritt
-        gradient_steps=1,  # Aktualisiert das Netzwerk nach jedem Sample
-        target_update_interval=5000,  # Häufigeres Update des Zielnetzwerks
-        exploration_fraction=0.2,  # Langsamerer Epsilon-Abbau
-        exploration_final_eps=0.02,  # Minimales Epsilon leicht erhöht
+        batch_size=128, 
+        tau=1.0,  
+        gamma=0.99,  
+        train_freq=(1, "step"), 
+        gradient_steps=1,
+        target_update_interval=5000, 
+        exploration_fraction=0.2,
+        exploration_final_eps=0.02,
         tensorboard_log="tensorboard/DQN",
         device=device,
     )
@@ -118,4 +122,4 @@ if __name__ == "__main__":
     )
 
     # 10. Modell speichern
-    model.save("models/DQN/Flappy_Bird_DQN")
+    model.save("vector_env\models\DQN")

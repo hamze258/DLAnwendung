@@ -2,7 +2,7 @@ import random
 
 import pygame.sprite
 
-import envs.objects.assets as assets
+import envs.objects.vector_env/assets as vector_env/assets
 import envs.configs as configs
 from envs.objects.layer import Layer
 
@@ -12,7 +12,7 @@ class Column(pygame.sprite.Sprite):
         self._layer = Layer.OBSTACLE
         self.gap = 150
 
-        self.sprite = assets.get_sprite("pipe-green")
+        self.sprite = vector_env/assets.get_sprite("pipe-green")
         self.sprite_rect = self.sprite.get_rect()
 
         self.pipe_bottom = self.sprite
@@ -29,7 +29,7 @@ class Column(pygame.sprite.Sprite):
         self.image.blit(self.pipe_bottom, self.pipe_bottom_rect)
         self.image.blit(self.pipe_top, self.pipe_top_rect)
 
-        sprite_floor_height = assets.get_sprite("floor").get_rect().height
+        sprite_floor_height = vector_env/assets.get_sprite("floor").get_rect().height
         min_y = 100
         max_y = configs.SCREEN_HEIGHT - sprite_floor_height - 100
 

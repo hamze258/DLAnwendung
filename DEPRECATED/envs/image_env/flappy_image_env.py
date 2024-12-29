@@ -4,7 +4,7 @@ import pygame
 import numpy as np
 import cv2  # OpenCV für Bildverarbeitung
 from  DEPRECATED.envs import configs
-from  DEPRECATED.envs.objects import assets
+from  DEPRECATED.envs.objects import vector_env/assets
 from  DEPRECATED.envs.objects.background import Background
 from  DEPRECATED.envs.objects.bird import Bird
 from  DEPRECATED.envs.objects.column import Column
@@ -29,8 +29,8 @@ class FlappyBirdEnv(gym.Env):
         )
         self.action_space = spaces.Discrete(2)  # 0 = keine Aktion, 1 = Fliegen
 
-        assets.load_sprites()
-        assets.load_audios()
+        vector_env/assets.load_sprites()
+        vector_env/assets.load_audios()
 
         self.sprites = pygame.sprite.LayeredUpdates()
         self.bird, self.score = None, None

@@ -1,7 +1,7 @@
 #main.py
 import pygame
 
-from envs.objects import assets
+from envs.objects import vector_env/assets
 import envs.configs as configs
 from envs.objects.background import Background
 from envs.objects.bird import Bird
@@ -15,7 +15,7 @@ pygame.init()
 
 screen = pygame.display.set_mode((configs.SCREEN_WIDTH, configs.SCREEN_HEIGHT))
 pygame.display.set_caption("Flappy Bird Game v1.0.2")
-img = pygame.image.load(r'data\assets\icons\red_bird.png')
+img = pygame.image.load(r'data\vector_env/assets\icons\red_bird.png')
 pygame.display.set_icon(img)
 
 clock = pygame.time.Clock()
@@ -23,8 +23,8 @@ running = True
 gameover = False
 gamestarted = False
 
-assets.load_sprites()
-assets.load_audios()
+vector_env/assets.load_sprites()
+vector_env/assets.load_audios()
 
 sprites = pygame.sprite.LayeredUpdates()
 
@@ -86,13 +86,13 @@ while running:
             gameover = True
             gamestarted = False
             GameOverMessage(sprites)
-            assets.play_audio("hit")
+            vector_env/assets.play_audio("hit")
 
     # Handle scoring when columns are passed
     for sprite in sprites:
         if isinstance(sprite, Column) and sprite.is_passed():
             score.value += 1
-            assets.play_audio("point")
+            vector_env/assets.play_audio("point")
 
     pygame.display.flip()
     clock.tick(FPS)

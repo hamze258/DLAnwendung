@@ -1,2 +1,2 @@
-from .vector_env.flappy_vector_env import FlappyVectorEnv
-from .image_env.flappy_image_env import FlappyBirdEnv
+from vector_env.agents.flappy_vector_env import FlappyBirdEnv
+from img_env.flappy_image_env import FlappyBirdEnv

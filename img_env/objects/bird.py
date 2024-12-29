@@ -1,6 +1,6 @@
 import pygame.sprite
 
-from envs.objects import assets
+from envs.objects import vector_env/assets
 import envs.configs as configs
 from envs.objects.layer import Layer
 from envs.objects.column import Column
@@ -12,9 +12,9 @@ class Bird(pygame.sprite.Sprite):
         super().__init__(*groups)
         self._layer = Layer.PLAYER
         self.images = [
-            assets.get_sprite("redbird-upflap"),
-            assets.get_sprite("redbird-midflap"),
-            assets.get_sprite("redbird-downflap")
+            vector_env/assets.get_sprite("redbird-upflap"),
+            vector_env/assets.get_sprite("redbird-midflap"),
+            vector_env/assets.get_sprite("redbird-downflap")
         ]
 
         self.image = self.images[0]
@@ -44,7 +44,7 @@ class Bird(pygame.sprite.Sprite):
     def handle_event(self, event):
         if event.type == pygame.KEYDOWN and event.key == pygame.K_SPACE:
             self.velocity = -6  # Beim Flügelschlag Geschwindigkeit nach oben setzen
-            #assets.play_audio("wing")
+            #vector_env/assets.play_audio("wing")
 
     def check_collision(self, sprites):
         for sprite in sprites:
@@ -57,5 +57,5 @@ class Bird(pygame.sprite.Sprite):
 
     def flap(self):
             self.velocity = -6
-            #assets.play_audio("wing")
+            #vector_env/assets.play_audio("wing")
 

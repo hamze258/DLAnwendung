@@ -4,7 +4,7 @@ from gymnasium import spaces
 import numpy as np
 import pygame
 from DEPRECATED.envs import configs
-from DEPRECATED.envs.objects import assets
+from DEPRECATED.envs.objects import vector_env/assets
 from DEPRECATED.envs.objects.background import Background
 from DEPRECATED.envs.objects.bird import Bird
 from DEPRECATED.envs.objects.column import Column
@@ -37,8 +37,8 @@ class FlappyVectorEnv(gym.Env):
             dtype=np.float32
         )
 
-        assets.load_sprites()
-        assets.load_audios()
+        vector_env/assets.load_sprites()
+        vector_env/assets.load_audios()
 
         self.sprites = pygame.sprite.LayeredUpdates()
         self.bird = None
@@ -107,7 +107,7 @@ class FlappyVectorEnv(gym.Env):
             done = True
             reward = -1
             self.total_deaths += 1
-            assets.play_audio("hit")
+            vector_env/assets.play_audio("hit")
         else:
             # Check for passing columns
             for sprite in self.sprites:
@@ -119,7 +119,7 @@ class FlappyVectorEnv(gym.Env):
                     if self.score.value > self.highest_score:
                         self.highest_score = self.score.value
                     reward += 1  # Reward for passing a column
-                    assets.play_audio("point")
+                    vector_env/assets.play_audio("point")
 
         observation = self._get_observation()
         info = {

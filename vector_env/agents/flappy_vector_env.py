@@ -3,8 +3,8 @@ from gymnasium import spaces
 import numpy as np
 import pygame
 
-from src.entities import Background, Floor, Pipes, Player, Score
-from src.utils import GameConfig, Window, Images, Sounds
+from vector_env.src.entities import Background, Floor, Pipes, Player, Score
+from  vector_env.src.utils import GameConfig, Window, Images, Sounds
 
 
 class FlappyBirdEnv(gym.Env):

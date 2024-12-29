@@ -1,6 +1,6 @@
 import pygame.sprite
 
-import envs.objects.assets as assets
+import envs.objects.vector_env/assets as vector_env/assets
 import envs.configs as configs
 from envs.objects.layer import Layer
 
@@ -8,7 +8,7 @@ from envs.objects.layer import Layer
 class Floor(pygame.sprite.Sprite):
     def __init__(self, index, *groups):
         self._layer = Layer.FLOOR
-        self.image = assets.get_sprite("floor")
+        self.image = vector_env/assets.get_sprite("floor")
         self.rect = self.image.get_rect(bottomleft=(configs.SCREEN_WIDTH * index, configs.SCREEN_HEIGHT))
         self.mask = pygame.mask.from_surface(self.image)
         super().__init__(*groups)

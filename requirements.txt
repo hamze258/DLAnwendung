@@ -14,3 +14,4 @@ tensorboard
 gymnasium
 torch
 stable-baselines3[extra]
+imageio

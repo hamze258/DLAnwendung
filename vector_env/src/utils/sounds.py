@@ -16,8 +16,8 @@ class Sounds:
         else:
             ext = "ogg"
 
-        self.die = pygame.mixer.Sound(f"assets/audio/die.{ext}")
-        self.hit = pygame.mixer.Sound(f"assets/audio/hit.{ext}")
-        self.point = pygame.mixer.Sound(f"assets/audio/point.{ext}")
-        self.swoosh = pygame.mixer.Sound(f"assets/audio/swoosh.{ext}")
-        self.wing = pygame.mixer.Sound(f"assets/audio/wing.{ext}")
+        self.die = pygame.mixer.Sound(f"vector_env/assets/audio/die.{ext}")
+        self.hit = pygame.mixer.Sound(f"vector_env/assets/audio/hit.{ext}")
+        self.point = pygame.mixer.Sound(f"vector_env/assets/audio/point.{ext}")
+        self.swoosh = pygame.mixer.Sound(f"vector_env/assets/audio/swoosh.{ext}")
+        self.wing = pygame.mixer.Sound(f"vector_env/assets/audio/wing.{ext}")

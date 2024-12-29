@@ -1,6 +1,6 @@
 import pygame.sprite
 
-import envs.objects.assets as assets
+import envs.objects.vector_env/assets as vector_env/assets
 import envs.configs as configs
 from envs.objects.layer import Layer
 
@@ -22,7 +22,7 @@ class Score(pygame.sprite.Sprite):
         self.width = 0
 
         for str_value_char in self.str_value:
-            img = assets.get_sprite(str_value_char)
+            img = vector_env/assets.get_sprite(str_value_char)
             self.images.append(img)
             self.width += img.get_width()
 

@@ -18,21 +18,21 @@ class Images:
     def __init__(self) -> None:
         self.numbers = list(
             (
-                pygame.image.load(f"assets/sprites/{num}.png").convert_alpha()
+                pygame.image.load(f"vector_env/assets/sprites/{num}.png").convert_alpha()
                 for num in range(10)
             )
         )
 
         # game over sprite
         self.game_over = pygame.image.load(
-            "assets/sprites/gameover.png"
+            "vector_env/assets/sprites/gameover.png"
         ).convert_alpha()
         # welcome_message sprite for welcome screen
         self.welcome_message = pygame.image.load(
-            "assets/sprites/message.png"
+            "vector_env/assets/sprites/message.png"
         ).convert_alpha()
         # base (ground) sprite
-        self.base = pygame.image.load("assets/sprites/base.png").convert_alpha()
+        self.base = pygame.image.load("vector_env/assets/sprites/base.png").convert_alpha()
         self.randomize()
 
     def randomize(self):
