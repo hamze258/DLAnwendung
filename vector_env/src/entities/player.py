@@ -151,17 +151,20 @@ class Player(Entity):
         if self.collide(floor):
             self.crashed = True
             self.crash_entity = "floor"
+            #print("Player crashed into floor!")
             return True
 
         for pipe in pipes.upper:
             if self.collide(pipe):
                 self.crashed = True
                 self.crash_entity = "pipe"
+                #print("Player crashed into pipe!")
                 return True
         for pipe in pipes.lower:
             if self.collide(pipe):
                 self.crashed = True
                 self.crash_entity = "pipe"
+                #print("Player crashed into pipe!")
                 return True
 
         return False

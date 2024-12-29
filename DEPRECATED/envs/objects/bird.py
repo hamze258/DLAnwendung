@@ -1,10 +1,10 @@
 import pygame.sprite
 
-from envs.objects import assets
-import envs.configs as configs
-from envs.objects.layer import Layer
-from envs.objects.column import Column
-from envs.objects.floor import Floor
+from  DEPRECATED.envs.objects import assets
+import  DEPRECATED.envs.configs as configs
+from  DEPRECATED.envs.objects.layer import Layer
+from  DEPRECATED.envs.objects.column import Column
+from  DEPRECATED.envs.objects.floor import Floor
 
 
 class Bird(pygame.sprite.Sprite):

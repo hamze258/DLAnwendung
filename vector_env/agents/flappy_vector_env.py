@@ -17,8 +17,8 @@ class FlappyBirdEnv(gym.Env):
     def __init__(self, render_mode=None):
         super(FlappyBirdEnv, self).__init__()
 
+        self.render_mode = render_mode
         pygame.init()
-        
         if render_mode == "human":
             pygame.display.set_caption("Flappy Bird")
             # Normale Konfiguration mit Fenster
@@ -59,7 +59,7 @@ class FlappyBirdEnv(gym.Env):
     def reset(self, seed=None, options=None):
         """Starte eine neue Episode."""
         super().reset(seed=seed)
-        
+
         # Initialisiere die Objekte neu
         self.background = Background(self.config)
         self.floor = Floor(self.config)
@@ -81,9 +81,11 @@ class FlappyBirdEnv(gym.Env):
         self.player.tick()
         self.pipes.tick()
         self.floor.tick()
+        
 
         # Debugging-Ausgaben
         print(f"Step: {self.step_count}")
+        print(f"Score: {self.score.score}")
         print(f"Player Position: ({self.player.x}, {self.player.y})")
         print(f"Number of Pipes: Upper - {len(self.pipes.upper)}, Lower - {len(self.pipes.lower)}")
         if len(self.pipes.upper) > 0:
@@ -98,11 +100,12 @@ class FlappyBirdEnv(gym.Env):
             reward = -1
 
         # Punkte erhöhen, wenn Pipes passiert werden
-        for pipe in self.pipes.upper:
-            if self.player.crossed(pipe):
+        for pipe in self.pipes.lower:
+            if not pipe.scored and pipe.cx < self.player.cx:
                 print("Pipe passiert!")
                 self.score.add()
                 reward += 1.0  # Belohnung für das Passieren einer Pipe
+                pipe.scored = True  # Markiere die Pipe als gezählt
 
         # Beobachtung erstellen
         observation = self._get_observation()
@@ -116,7 +119,7 @@ class FlappyBirdEnv(gym.Env):
 
     def _get_observation(self):
         """Beobachtung basierend auf dem Spielzustand erstellen."""
-        bird_y = self.player.y / self.config.SCREEN_HEIGHT
+        bird_y = self.player.y / self.config.window.viewport_height
         bird_velocity = self.player.vel_y / 10
 
         # Finde die nächste Pipe
@@ -131,47 +134,68 @@ class FlappyBirdEnv(gym.Env):
 
         if next_pipe:
             upper_pipe, lower_pipe = next_pipe
-            next_pipe_x = (upper_pipe.x - self.player.x) / self.config.SCREEN_WIDTH
-            next_pipe_top_y = upper_pipe.y / self.config.SCREEN_HEIGHT
-            next_pipe_bottom_y = lower_pipe.y / self.config.SCREEN_HEIGHT
+            next_pipe_x = (upper_pipe.x - self.player.x) / self.config.window.width
+            next_pipe_top_y = upper_pipe.y / self.config.window.viewport_height
+            next_pipe_bottom_y = lower_pipe.y / self.config.window.viewport_height
         else:
             next_pipe_x = 1.0
             next_pipe_top_y = 0.5
             next_pipe_bottom_y = 0.5
 
-        
-
         return np.array([bird_y, bird_velocity, next_pipe_x, next_pipe_top_y, next_pipe_bottom_y], dtype=np.float32)
 
-    def render(self, mode="human"):
-        """Das Spiel rendern."""
-        if self.render_mode == "human" and self.window:
-            self.window.clear()  # Bildschirm leeren
-            self.background.draw()  # Hintergrund zeichnen
-            self.pipes.draw()       # Pipes zeichnen
-            self.floor.draw()       # Boden zeichnen
-            self.player.draw()      # Spieler zeichnen
-            self.score.draw()       # Punktestand zeichnen
-            pygame.display.update()  # Bildschirm aktualisieren
+    def render(self):
+        """Das Spiel rendern basierend auf dem angegebenen Modus."""
+        mode=self.render_mode
         
+        # Aktualisiere alle Objekte
+        self.background.tick()
+        self.pipes.tick()
+        self.floor.tick()
+        self.player.tick()
+        self.score.tick()
+        
+        # Zeichne die Objekte
+        if mode == "human" and self.window:
+            self.config.screen.fill((0, 0, 0))  # Bildschirm leeren
+            self.background.draw()
+            self.pipes.draw()
+            self.floor.draw()
+            self.player.draw()
+            self.score.draw()
+            pygame.display.update()
+        
+        elif mode == "rgb_array":
+            # Zeichnen für den 'rgb_array'-Modus
+            self.config.screen.fill((0, 0, 0))
+            self.background.draw()
+            self.pipes.draw()
+            self.floor.draw()
+            self.player.draw()
+            self.score.draw()
+            # Extrahiere den Frame als numpy-Array
+            return pygame.surfarray.array3d(self.config.screen).transpose((1, 0, 2))
+        else:
+            return None
+
     def close(self):
         """Schließt Ressourcen."""
-        if self.window:
-            self.window.close()
+        pygame.quit()
 
 def create_headless_config():
     """
-    Erstellt eine GameConfig für headless-Modus (ohne grafische Darstellung).
+    Erstellt eine GameConfig für den headless-Modus (ohne grafische Darstellung).
     """
+    import os
+    os.environ["SDL_VIDEODRIVER"] = "dummy"  # Dummy-Videotreiber für Headless-Betrieb
     pygame.init()
     
-    # Dummy Screen: Kein Rendern erforderlich
-    screen = pygame.Surface((1, 1))  # Minimaler Dummy-Bildschirm
+    screen = pygame.Surface((288, 512))  # Dummy-Screen
     clock = pygame.time.Clock()
     fps = 30
-    window = Window(1, 1)  # Dummy-Fenster
-    images = Images()  # Lade Bilder (kann leere Implementierung sein, falls nicht nötig)
-    sounds = Sounds()  # Lade Sounds (kann ebenfalls leer sein)
+    window = Window(288, 512)
+    images = Images()
+    sounds = Sounds()
 
     return GameConfig(
         screen=screen,
@@ -180,4 +204,5 @@ def create_headless_config():
         window=window,
         images=images,
         sounds=sounds,
+
     )

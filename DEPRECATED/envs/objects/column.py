@@ -2,9 +2,9 @@ import random
 
 import pygame.sprite
 
-import envs.objects.assets as assets
-import envs.configs as configs
-from envs.objects.layer import Layer
+import  DEPRECATED.envs.objects.assets as assets
+import  DEPRECATED.envs.configs as configs
+from  DEPRECATED.envs.objects.layer import Layer
 
 
 class Column(pygame.sprite.Sprite):

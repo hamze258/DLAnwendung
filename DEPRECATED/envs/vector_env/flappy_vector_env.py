@@ -3,15 +3,15 @@ import gymnasium as gym
 from gymnasium import spaces
 import numpy as np
 import pygame
-from envs import configs
-from envs.objects import assets
-from envs.objects.background import Background
-from envs.objects.bird import Bird
-from envs.objects.column import Column
-from envs.objects.floor import Floor
-from envs.objects.score import Score
+from DEPRECATED.envs import configs
+from DEPRECATED.envs.objects import assets
+from DEPRECATED.envs.objects.background import Background
+from DEPRECATED.envs.objects.bird import Bird
+from DEPRECATED.envs.objects.column import Column
+from DEPRECATED.envs.objects.floor import Floor
+from DEPRECATED.envs.objects.score import Score
 
-class FlappyBirdEnv(gym.Env):
+class FlappyVectorEnv(gym.Env):
     """Flappy Bird Environment for Reinforcement Learning."""
     
     metadata = {"render.modes": ["human", "rgb_array"]}

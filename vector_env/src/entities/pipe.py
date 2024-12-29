@@ -9,10 +9,14 @@ class Pipe(Entity):
     def __init__(self, *args, **kwargs) -> None:
         super().__init__(*args, **kwargs)
         self.vel_x = -5
+        self.scored = False  # Neue Eigenschaft
+        
 
     def draw(self) -> None:
         self.x += self.vel_x
         super().draw()
+        if self.image:
+            self.config.screen.blit(self.image, (self.x, self.y))  # Zeichne die Pipe
 
 
 class Pipes(Entity):
@@ -37,6 +41,11 @@ class Pipes(Entity):
             up_pipe.tick()
             low_pipe.tick()
 
+    def draw(self):
+        for upper, lower in zip(self.upper, self.lower):
+            upper.draw()
+            lower.draw()
+    
     def stop(self) -> None:
         for pipe in self.upper + self.lower:
             pipe.vel_x = 0

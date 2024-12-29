@@ -1,8 +1,8 @@
 import pygame.sprite
 
-from envs.objects import assets
-import envs.configs as configs
-from envs.objects.layer import Layer
+from DEPRECATED.envs.objects import assets
+import  DEPRECATED.envs.configs as configs
+from  DEPRECATED.envs.objects.layer import Layer
 
 
 class Background(pygame.sprite.Sprite):
