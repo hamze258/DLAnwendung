@@ -30,3 +30,11 @@ Hier ist eine Übersicht der Ordner und Dateien im Repository:
   ```bash
   pip install -r requirements.txt
   ```
+
+## Troubleshooting
+
+Wenn man die Module nicht finden kann in Windows, dann muss man PYTHONPATH aktualsieren
+
+```bash
+$Env:PYTHONPATH = "C:\Users\Hamze\Desktop\DLAnwendung;" + $Env:PYTHONPATH
+```
