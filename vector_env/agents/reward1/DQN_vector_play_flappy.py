@@ -5,7 +5,7 @@ from vector_env.agents.reward1.flappy_vector_env import FlappyBirdEnv
 import keyboard
 
 # Wrappen im VecEnv
-env = DummyVecEnv([lambda: FlappyBirdEnv(render_mode="human")])
+env = DummyVecEnv([lambda: FlappyBirdEnv(render_mode=None)])
 
 # Gelerntes Modell laden
 model = DQN.load(r"vector_env\models\DQN\training4\best_model.zip")
@@ -18,7 +18,7 @@ try:
             action, _ = model.predict(obs, deterministic=True)
             obs, reward, done, info = env.step(action)
             #time.sleep(0.02)
-            env.render()
+            #env.render()
 
             if keyboard.is_pressed('q'):  # Prüfen, ob 'q' gedrückt wurde
                 print("Spiel manuell beendet.")

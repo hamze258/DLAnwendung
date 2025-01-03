@@ -6,13 +6,13 @@ import time
 import keyboard
 
 # Wrappen im VecEnv
-env = DummyVecEnv([lambda: FlappyBirdEnv(render_mode="rgb_array")])
+env = DummyVecEnv([lambda: FlappyBirdEnv(render_mode="human")])
 
 # Gelerntes Modell laden
-model = PPO.load(r"vector_env\models\PPO\training2\best_model.zip")
+model = PPO.load(r"vector_env\models\PPO\training3\best_model.zip")
 
 try:
-    for i in range(100):  # Äußere Schleife für kontinuierliches Spielen
+    for i in range(5):  # Äußere Schleife für kontinuierliches Spielen
         obs = env.reset()
         done = False
         while not done:
