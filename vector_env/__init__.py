@@ -1,1 +1,1 @@
-from vector_env.agents.flappy_vector_env import FlappyBirdEnv
+from vector_env.agents.reward1.flappy_vector_env import FlappyBirdEnv

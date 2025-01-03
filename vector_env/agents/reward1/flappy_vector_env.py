@@ -79,34 +79,21 @@ class FlappyBirdEnv(gym.Env):
             self.player.flap()
 
         # Update der Objekte
-        
         self.background.tick()
         self.score.tick()
         self.pipes.tick()
         self.floor.tick()
         self.player.tick()
-        
-        # Debugging-Ausgaben
-        #print(f"Step: {self.step_count}")
-        
-        #print(f"Player Position: ({self.player.x}, {self.player.y})")
-        #print(f"Number of Pipes: Upper - {len(self.pipes.upper)}, Lower - {len(self.pipes.lower)}")
-        # if len(self.pipes.upper) > 0:
-        #     print(f"First Pipe Position: Upper ({self.pipes.upper[0].x}, {self.pipes.upper[0].y}), "
-        #         f"Lower ({self.pipes.lower[0].x}, {self.pipes.lower[0].y})")
 
-        # Kollision prüfen
+        # Kollision prüfen und Belohnungen berechnen
         reward = 0.1  # Kleine Belohnung für Überleben
         if self.player.collided(self.pipes, self.floor):
-            #print("Kollision erkannt!")
             self.gameover = True
             reward = -1
-            #print(f"Score: {self.score.score}")
 
         # Punkte erhöhen, wenn Pipes passiert werden
         for pipe in self.pipes.lower:
             if not pipe.scored and pipe.cx < self.player.cx:
-                #print("Pipe passiert!")
                 self.score.add()
                 reward += 1.0  # Belohnung für das Passieren einer Pipe
                 pipe.scored = True  # Markiere die Pipe als gezählt
@@ -117,11 +104,25 @@ class FlappyBirdEnv(gym.Env):
         # Episode beenden, wenn Spiel vorbei ist
         done = self.gameover
         info = {"score": self.score.score}
-        # if self.gameover:
-        #     print(f"Total Reward for Episode: {self.score.score}")
+        if self.gameover:
+            print(f"Total Reward for Episode: {self.score.score}")
 
         self.step_count += 1
+
+        # Rendering nach dem Update
+        if self.render_mode in ["human", "rgb_array"]:
+            self.render()
+        
+        #print(f"Player Position: ({self.player.x}, {self.player.y})")
+        #print(f"Number of Pipes: Upper - {len(self.pipes.upper)}, Lower - {len(self.pipes.lower)}")
+        # if len(self.pipes.upper) > 0:
+        #     print(f"First Pipe Position: Upper ({self.pipes.upper[0].x}, {self.pipes.upper[0].y}), "
+        #         f"Lower ({self.pipes.lower[0].x}, {self.pipes.lower[0].y})")
+
+        self.config.clock.tick(self.config.fps)
+        
         return observation, reward, done, False, info
+
 
     def _get_observation(self):
         """Create an observation based on the current game state."""
@@ -161,7 +162,12 @@ class FlappyBirdEnv(gym.Env):
 
     def render(self):
         """Das Spiel rendern basierend auf dem angegebenen Modus."""
-        mode=self.render_mode
+        mode = self.render_mode
+
+        # Ereignisse verarbeiten
+        for event in pygame.event.get():
+            if event.type == pygame.QUIT:
+                self.close()
 
         # Zeichne die Objekte
         if mode == "human" and self.window:
@@ -172,6 +178,7 @@ class FlappyBirdEnv(gym.Env):
             self.player.draw()
             self.score.draw()
             pygame.display.update()
+            
         
         elif mode == "rgb_array":
             # Zeichnen für den 'rgb_array'-Modus

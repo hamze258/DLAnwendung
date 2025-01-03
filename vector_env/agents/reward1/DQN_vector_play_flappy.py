@@ -5,13 +5,13 @@ from vector_env.agents.reward1.flappy_vector_env import FlappyBirdEnv
 import keyboard
 
 # Wrappen im VecEnv
-env = DummyVecEnv([lambda: FlappyBirdEnv()])
+env = DummyVecEnv([lambda: FlappyBirdEnv(render_mode="human")])
 
 # Gelerntes Modell laden
 model = DQN.load(r"vector_env\models\DQN\training4\best_model.zip")
 
 try:
-    for i in range(100):  # Äußere Schleife für kontinuierliches Spielen
+    for i in range(5):  # Äußere Schleife für kontinuierliches Spielen
         obs = env.reset()
         done = False
         while not done:
