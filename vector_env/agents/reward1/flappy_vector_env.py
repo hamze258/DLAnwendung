@@ -35,7 +35,6 @@ class FlappyBirdEnv(gym.Env):
             # Headless-Konfiguration ohne Fenster
             self.config = create_headless_config()
 
-        self.render_mode = render_mode
         self.window = None if render_mode != "human" else self.config.window
 
         # Gym Spaces
@@ -104,8 +103,8 @@ class FlappyBirdEnv(gym.Env):
         # Episode beenden, wenn Spiel vorbei ist
         done = self.gameover
         info = {"score": self.score.score}
-        if self.gameover:
-            print(f"Total Reward for Episode: {self.score.score}")
+        # if self.gameover:
+        #     print(f"Total Reward for Episode: {self.score.score}")
 
         self.step_count += 1
 
@@ -119,7 +118,6 @@ class FlappyBirdEnv(gym.Env):
         #     print(f"First Pipe Position: Upper ({self.pipes.upper[0].x}, {self.pipes.upper[0].y}), "
         #         f"Lower ({self.pipes.lower[0].x}, {self.pipes.lower[0].y})")
 
-        self.config.clock.tick(self.config.fps)
         
         return observation, reward, done, False, info
 
@@ -164,10 +162,11 @@ class FlappyBirdEnv(gym.Env):
         """Das Spiel rendern basierend auf dem angegebenen Modus."""
         mode = self.render_mode
 
-        # Ereignisse verarbeiten
-        for event in pygame.event.get():
-            if event.type == pygame.QUIT:
-                self.close()
+        if mode == "human":
+        # Ereignisse verarbeiten nur im human-Modus
+            for event in pygame.event.get():
+                if event.type == pygame.QUIT:
+                    self.close()
 
         # Zeichne die Objekte
         if mode == "human" and self.window:
@@ -178,6 +177,7 @@ class FlappyBirdEnv(gym.Env):
             self.player.draw()
             self.score.draw()
             pygame.display.update()
+            self.config.clock.tick(self.config.fps)
             
         
         elif mode == "rgb_array":
