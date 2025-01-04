@@ -79,7 +79,7 @@ class FlappyBirdEnv(gym.Env):
             reward = -1
 
         # Reward for passing pipes
-        for pipe in self.pipes.lower:
+        for pipe in self.pipes.upper:
             if not pipe.scored and pipe.cx < self.player.cx:
                 self.score.add()
                 reward += 1.0
