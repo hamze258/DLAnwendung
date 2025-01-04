@@ -34,7 +34,7 @@ class FlappyBirdEnv(gym.Env):
         self.action_space = spaces.Discrete(2)  # 0 = do nothing, 1 = flap
         self.observation_space = spaces.Box(
             low=np.array([0.0, -10.0, 0.0, 0.0, 0.0, -1.0, 0.0, 0.0], dtype=np.float32),
-            high=np.array([1.0, 10.0, 2.0, 2.0, 2.0, 1.0, 1.0, 2.0], dtype=np.float32),
+            high=np.array([1.0, 10.0, 2.0, 1.0, 1.0, 1.0, 1.0, 2.0], dtype=np.float32),
             dtype=np.float32
         )
 
@@ -140,8 +140,8 @@ class FlappyBirdEnv(gym.Env):
             pipe_gap_size = (lower_pipe.y - upper_pipe.bottom_y) / self.config.window.viewport_height
         else:
             next_pipe_x = 2.0
-            next_pipe_top_y = 1.0
-            next_pipe_bottom_y = 1.0
+            next_pipe_top_y = 0.5
+            next_pipe_bottom_y = 0.5
             relative_height = 0.0
             pipe_width = 0.0
             pipe_gap_size = 0.0  # Optional
@@ -150,8 +150,8 @@ class FlappyBirdEnv(gym.Env):
         bird_y = np.clip(bird_y, 0.0, 1.0)
         bird_velocity = np.clip(bird_velocity, -10.0, 10.0)
         next_pipe_x = np.clip(next_pipe_x, 0.0, 2.0)
-        next_pipe_top_y = np.clip(next_pipe_top_y, 0.0, 2.0)
-        next_pipe_bottom_y = np.clip(next_pipe_bottom_y, 0.0, 2.0)
+        next_pipe_top_y = np.clip(next_pipe_top_y, 0.0, 1.0)
+        next_pipe_bottom_y = np.clip(next_pipe_bottom_y, 0.0, 1.0)
         relative_height = np.clip(relative_height, -1.0, 1.0)
         pipe_width = np.clip(pipe_width, 0.0, 1.0)
         pipe_gap_size = np.clip(pipe_gap_size, 0.0, 2.0)
@@ -226,8 +226,8 @@ class FlappyBirdEnv(gym.Env):
                     pygame.Rect(
                         self.player.x, 
                         self.player.y, 
-                        self.player.width, 
-                        self.player.height
+                        self.player.w, 
+                        self.player.h
                     ),
                     2,  # Linienbreite
                 )
