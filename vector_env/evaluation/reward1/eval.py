@@ -16,34 +16,37 @@ def evaluate_model(model, env, n_episodes=1000):
     """
     Führt n_episodes Episoden im gegebenen (Vec-)Env durch
     und gibt zwei Listen zurück:
-      1. rewards_all_episodes: Summe der Rewards pro Episode
-      2. inference_times: Zeit (in Sekunden) für jeden predict()-Aufruf
+      1. scores_all_episodes: Score pro Episode
+      2. inference_times: Zeit (in Mikrosekunden) für jeden predict()-Aufruf
     """
-    rewards_all_episodes = []
-    inference_times = []  # Speichert die Zeit pro predict()-Aufruf
-    success_episodes = 0  # Zählt erfolgreiche Episoden, falls definiert
+    scores_all_episodes = []
+    inference_times = []  # Speichert die Zeit pro predict()-Aufruf in Mikrosekunden
 
     for ep in range(n_episodes):
         obs = env.reset()
         done = False
-        total_reward = 0
+        total_score = 0
 
         while not done:
             start_time = time.perf_counter()
             action, _states = model.predict(obs, deterministic=True)
             end_time = time.perf_counter()
 
-            # Inference-Zeit für diesen Schritt
-            inference_times.append(end_time - start_time)
+            # Inference-Zeit für diesen Schritt in Mikrosekunden
+            inference_time_us = (end_time - start_time) * 1e6
+            inference_times.append(inference_time_us)
 
             # Schritt im Environment
             obs, reward, done, info = env.step(action)
-            total_reward += reward[0]  # DummyVecEnv => reward ist Array
+            
+            # Extrahiere den Score aus dem info-Dictionary
+            # Annahme: 'score' ist im info-Dictionary enthalten
+            score = info[0].get('score', 0)  # DummyVecEnv => info ist eine Liste
+            total_score = score  # Update des Scores (falls kumulativ, ändern Sie dies entsprechend
 
-        rewards_all_episodes.append(total_reward)
+        scores_all_episodes.append(total_score)
         
-
-    return rewards_all_episodes, inference_times  #, success_rate
+    return scores_all_episodes, inference_times  #, success_rate
 
 # ----------------------------------------------------
 # Funktion für kumulative Durchschnittswerte
@@ -57,175 +60,222 @@ def cumulative_average(data):
     return cum_sum / np.arange(1, len(data) + 1)
 
 # ----------------------------------------------------
+# Funktion zum Speichern der Metriken als NumPy-Arrays
+# ----------------------------------------------------
+def save_metrics_as_numpy(save_dir, scores_dqn, scores_ppo, inference_times_dqn_us, inference_times_ppo_us):
+    """
+    Speichert die Metriken als NumPy-Arrays in einer .npz-Datei.
+    """
+    np.savez(
+        os.path.join(save_dir, "evaluation_metrics.npz"),
+        scores_dqn=np.array(scores_dqn),
+        scores_ppo=np.array(scores_ppo),
+        inference_times_dqn_us=np.array(inference_times_dqn_us),
+        inference_times_ppo_us=np.array(inference_times_ppo_us)
+    )
+    print(f"Metriken wurden als NumPy-Arrays in 'evaluation_metrics.npz' gespeichert.")
+
+# ----------------------------------------------------
+# Funktion zum Laden der gespeicherten NumPy-Arrays (optional)
+# ----------------------------------------------------
+def load_metrics_from_numpy(save_dir):
+    """
+    Lädt die Metriken aus einer .npz-Datei.
+    """
+    data = np.load(os.path.join(save_dir, "evaluation_metrics.npz"))
+    scores_dqn = data['scores_dqn']
+    scores_ppo = data['scores_ppo']
+    inference_times_dqn_us = data['inference_times_dqn_us']
+    inference_times_ppo_us = data['inference_times_ppo_us']
+    return scores_dqn, scores_ppo, inference_times_dqn_us, inference_times_ppo_us
+
+# ----------------------------------------------------
 # Hauptteil: Vergleich von zwei Modellen
 # ----------------------------------------------------
 if __name__ == "__main__":
     # ------------------------------------------------------------
     # 0) Sicherstellen, dass das Verzeichnis existiert
     # ------------------------------------------------------------
-    save_dir = os.path.join("vector_env", "evaluation", "train1", "diagrams")
+    save_dir = os.path.join("vector_env", "evaluation", "reward1", "diagrams")
     os.makedirs(save_dir, exist_ok=True)
 
     # 1) Environment erstellen (ggf. mit render=False)
-    env = DummyVecEnv([lambda: FlappyBirdEnv(render_mode="rgb_array")])
+    env = DummyVecEnv([lambda: FlappyBirdEnv()])
 
     # 2) Zwei vortrainierte Modelle laden
-    model_dqn = DQN.load(r"vector_env\models\DQN\training4\best_model.zip")
-    model_ppo = PPO.load(r"vector_env\models\PPO\training1\best_model.zip")
+    model_dqn = DQN.load(r"vector_env\models\DQN\training6\best_model.zip")
+    model_ppo = PPO.load(r"vector_env\models\PPO\training4\best_model.zip")
     # Falls Sie ein anderes zweites Modell vergleichen möchten, laden Sie es hier.
 
     # 3) Anzahl der Episoden für den Vergleich
     num_episodes = 1000  # Erhöht für robustere Statistiken
 
     # 4) Modelle auswerten
-    rewards_dqn, inference_times_dqn = evaluate_model(model_dqn, env, num_episodes)
-    rewards_ppo, inference_times_ppo = evaluate_model(model_ppo, env, num_episodes)
+    scores_dqn, inference_times_dqn = evaluate_model(model_dqn, env, num_episodes)
+    scores_ppo, inference_times_ppo = evaluate_model(model_ppo, env, num_episodes)
 
     # Environment schließen (nach Evaluation)
     env.close()
 
-    # 5) Belohnungs-Statistiken berechnen
-    mean_dqn = np.mean(rewards_dqn)
-    std_dqn  = np.std(rewards_dqn)
-    mean_ppo = np.mean(rewards_ppo)
-    std_ppo  = np.std(rewards_ppo)
+    # Umwandlung der Listen in NumPy-Arrays (falls noch nicht geschehen)
+    scores_dqn = np.array(scores_dqn)
+    scores_ppo = np.array(scores_ppo)
+    inference_times_dqn_us = np.array(inference_times_dqn)
+    inference_times_ppo_us = np.array(inference_times_ppo)
 
-    print(f"[REWARD] DQN: Mean = {mean_dqn:.2f}, Std = {std_dqn:.2f}")
-    print(f"[REWARD] PPO: Mean = {mean_ppo:.2f}, Std = {std_ppo:.2f}")
+    # 5) Score-Statistiken berechnen
+    mean_dqn = np.mean(scores_dqn)
+    std_dqn  = np.std(scores_dqn)
+    mean_ppo = np.mean(scores_ppo)
+    std_ppo  = np.std(scores_ppo)
+
+    print(f"[SCORE] DQN: Mean = {mean_dqn:.2f}, Std = {std_dqn:.2f}")
+    print(f"[SCORE] PPO: Mean = {mean_ppo:.2f}, Std = {std_ppo:.2f}")
 
     # 6) Inference-Time-Statistiken
-    mean_inf_dqn = np.mean(inference_times_dqn)
-    std_inf_dqn  = np.std(inference_times_dqn)
-    mean_inf_ppo = np.mean(inference_times_ppo)
-    std_inf_ppo  = np.std(inference_times_ppo)
+    mean_inf_dqn = np.mean(inference_times_dqn_us)
+    std_inf_dqn  = np.std(inference_times_dqn_us)
+    mean_inf_ppo = np.mean(inference_times_ppo_us)
+    std_inf_ppo  = np.std(inference_times_ppo_us)
 
-    print(f"[INFERENCE TIME] DQN: Mean = {mean_inf_dqn*1e3:.4f} ms, Std = {std_inf_dqn*1e3:.4f} ms")
-    print(f"[INFERENCE TIME] PPO: Mean = {mean_inf_ppo*1e3:.4f} ms, Std = {std_inf_ppo*1e3:.4f} ms")
+    print(f"[INFERENCE TIME] DQN: Mean = {mean_inf_dqn:.2f} µs, Std = {std_inf_dqn:.2f} µs")
+    print(f"[INFERENCE TIME] PPO: Mean = {mean_inf_ppo:.2f} µs, Std = {std_inf_ppo:.2f} µs")
 
     # Zusätzliche Metriken zur Robustheit
     # Beispiel: Schlechteste und beste Episode
-    min_reward_dqn = np.min(rewards_dqn)
-    max_reward_dqn = np.max(rewards_dqn)
-    min_reward_ppo = np.min(rewards_ppo)
-    max_reward_ppo = np.max(rewards_ppo)
+    min_score_dqn = np.min(scores_dqn)
+    max_score_dqn = np.max(scores_dqn)
+    min_score_ppo = np.min(scores_ppo)
+    max_score_ppo = np.max(scores_ppo)
 
-    print(f"DQN: Min Reward = {min_reward_dqn}, Max Reward = {max_reward_dqn}")
-    print(f"PPO: Min Reward = {min_reward_ppo}, Max Reward = {max_reward_ppo}")
+    print(f"DQN: Min Score = {min_score_dqn}, Max Score = {max_score_dqn}")
+    print(f"PPO: Min Score = {min_score_ppo}, Max Score = {max_score_ppo}")
 
     # ------------------------------------------------------------
-    # DataFrame für Plotly (Rewards pro Episode, Algorithm)
+    # Speichern der Metriken als NumPy-Arrays
+    # ------------------------------------------------------------
+    save_metrics_as_numpy(
+        save_dir,
+        scores_dqn,
+        scores_ppo,
+        inference_times_dqn_us,
+        inference_times_ppo_us
+    )
+
+    # ------------------------------------------------------------
+    # DataFrame für Plotly (Scores pro Episode, Algorithmus)
     # ------------------------------------------------------------
     df_dqn = pd.DataFrame({
-        "Episode": range(1, len(rewards_dqn) + 1),
-        "Reward": rewards_dqn,
-        "Algorithm": ["DQN"] * len(rewards_dqn)
+        "Episode": range(1, len(scores_dqn) + 1),
+        "Score": scores_dqn,
+        "Algorithm": ["DQN"] * len(scores_dqn)
     })
 
     df_ppo = pd.DataFrame({
-        "Episode": range(1, len(rewards_ppo) + 1),
-        "Reward": rewards_ppo,
-        "Algorithm": ["PPO"] * len(rewards_ppo)
+        "Episode": range(1, len(scores_ppo) + 1),
+        "Score": scores_ppo,
+        "Algorithm": ["PPO"] * len(scores_ppo)
     })
 
-    df_rewards = pd.concat([df_dqn, df_ppo], ignore_index=True)
+    df_scores = pd.concat([df_dqn, df_ppo], ignore_index=True)
 
     # ------------------------------------------------------------
-    # Plot 1: Boxplot für beide Algorithmen (Reward-Verteilung)
+    # Plot 1: Boxplot für beide Algorithmen (Score-Verteilung)
     # ------------------------------------------------------------
     fig_box = go.Figure()
     fig_box.add_trace(go.Box(
-        y=rewards_dqn,
+        y=scores_dqn,
         name='DQN',
         boxmean='sd'   # zeigt Durchschnitt + SD
     ))
     fig_box.add_trace(go.Box(
-        y=rewards_ppo,
+        y=scores_ppo,
         name='PPO',
         boxmean='sd'
     ))
     fig_box.update_layout(
-        title='Boxplot: DQN vs. PPO (Rewards)',
-        yaxis_title='Rewards'
+        title='Boxplot: DQN vs. PPO (Scores)',
+        yaxis_title='Score'
     )
-    fig_box.write_image(os.path.join(save_dir, "boxplot_rewards.png"))
+    fig_box.write_image(os.path.join(save_dir, "boxplot_scores.png"))
     fig_box.show()
 
     # ------------------------------------------------------------
-    # Plot 2: Gemeinsames Histogramm (Rewards)
+    # Plot 2: Gemeinsames Histogramm (Scores)
     # ------------------------------------------------------------
     fig_hist = go.Figure()
     fig_hist.add_trace(go.Histogram(
-        x=rewards_dqn, 
+        x=scores_dqn, 
         name='DQN', 
         opacity=0.7
     ))
     fig_hist.add_trace(go.Histogram(
-        x=rewards_ppo, 
+        x=scores_ppo, 
         name='PPO', 
         opacity=0.7
     ))
     fig_hist.update_layout(
         barmode='overlay',
-        title='Histogramm: DQN vs. PPO (Rewards)',
-        xaxis_title='Rewards',
+        title='Histogramm: DQN vs. PPO (Scores)',
+        xaxis_title='Score',
         yaxis_title='Anzahl',
         bargap=0.2
     )
     fig_hist.update_traces(opacity=0.75)
-    fig_hist.write_image(os.path.join(save_dir, "histogram_rewards.png"))
+    fig_hist.write_image(os.path.join(save_dir, "histogram_scores.png"))
     fig_hist.show()
 
     # ------------------------------------------------------------
     # Plot 3: ECDF (Empirical Cumulative Distribution Function)
     # ------------------------------------------------------------
     fig_ecdf = px.ecdf(
-        df_rewards,
-        x="Reward",
+        df_scores,
+        x="Score",
         color="Algorithm",
-        title="ECDF: DQN vs. PPO (Rewards)"
+        title="ECDF: DQN vs. PPO (Scores)"
     )
     fig_ecdf.update_layout(
-        xaxis_title='Reward',
+        xaxis_title='Score',
         yaxis_title='Kumulative Wahrscheinlichkeit'
     )
-    fig_ecdf.write_image(os.path.join(save_dir, "ecdf_rewards.png"))
+    fig_ecdf.write_image(os.path.join(save_dir, "ecdf_scores.png"))
     fig_ecdf.show()
 
     # ------------------------------------------------------------
-    # Plot 4: Violin-Plot (Rewards)
+    # Plot 4: Violin-Plot (Scores)
     # ------------------------------------------------------------
     fig_violin = px.violin(
-        df_rewards,
-        y="Reward",
+        df_scores,
+        y="Score",
         color="Algorithm",
         box=True,        # zeigt zusätzlich den Boxplot
         points="all",    # alle Datenpunkte
-        title="Violin Plot der Rewards (DQN vs. PPO)"
+        title="Violin Plot der Scores (DQN vs. PPO)"
     )
-    fig_violin.update_layout(yaxis_title='Rewards')
-    fig_violin.write_image(os.path.join(save_dir, "violin_rewards.png"))
+    fig_violin.update_layout(yaxis_title='Score')
+    fig_violin.write_image(os.path.join(save_dir, "violin_scores.png"))
     fig_violin.show()
 
     # ------------------------------------------------------------
-    # Plot 5a: Liniendiagramm: Reward pro Episode (ungeglättet)
+    # Plot 5a: Liniendiagramm: Score pro Episode (ungeglättet)
     # ------------------------------------------------------------
-    # Damit sieht man, wie sich der Reward bei jeder Episode entwickelt hat.
+    # Damit sieht man, wie sich der Score bei jeder Episode entwickelt hat.
     fig_line_episodes = px.line(
-        df_rewards,
+        df_scores,
         x="Episode",
-        y="Reward",
+        y="Score",
         color="Algorithm",
-        title="Rewards pro Episode (DQN vs. PPO)"
+        title="Scores pro Episode (DQN vs. PPO)"
     )
-    fig_line_episodes.update_layout(xaxis_title='Episode', yaxis_title='Reward')
-    fig_line_episodes.write_image(os.path.join(save_dir, "line_episode_rewards.png"))
+    fig_line_episodes.update_layout(xaxis_title='Episode', yaxis_title='Score')
+    fig_line_episodes.write_image(os.path.join(save_dir, "line_episode_scores.png"))
     fig_line_episodes.show()
 
     # ------------------------------------------------------------
-    # Plot 5b: Liniendiagramm kumulativer Durchschnitt (Rewards)
+    # Plot 5b: Liniendiagramm kumulativer Durchschnitt (Scores)
     # ------------------------------------------------------------
-    cum_avg_dqn = cumulative_average(rewards_dqn)
-    cum_avg_ppo = cumulative_average(rewards_ppo)
+    cum_avg_dqn = cumulative_average(scores_dqn)
+    cum_avg_ppo = cumulative_average(scores_ppo)
 
     fig_line_cum = go.Figure()
     fig_line_cum.add_trace(go.Scatter(
@@ -241,84 +291,81 @@ if __name__ == "__main__":
         name='PPO (Kumul. Avg)'
     ))
     fig_line_cum.update_layout(
-        title='Kumulative Durchschnitts-Rewards pro Episode (DQN vs. PPO)',
+        title='Kumulative Durchschnitts-Scores pro Episode (DQN vs. PPO)',
         xaxis_title='Episode',
-        yaxis_title='Kumulativer Durchschnitts-Reward'
+        yaxis_title='Kumulativer Durchschnitts-Score'
     )
-    fig_line_cum.write_image(os.path.join(save_dir, "line_cumulative_avg.png"))
+    fig_line_cum.write_image(os.path.join(save_dir, "line_cumulative_avg_scores.png"))
     fig_line_cum.show()
 
     # ------------------------------------------------------------
-    # Plot 6: Boxplot der Inference-Zeiten
+    # Plot 6: Boxplot der Inference-Zeiten (Mikrosekunden)
     # ------------------------------------------------------------
-    times_dqn_ms = [t * 1e3 for t in inference_times_dqn]
-    times_ppo_ms = [t * 1e3 for t in inference_times_ppo]
-
     fig_inf_box = go.Figure()
     fig_inf_box.add_trace(go.Box(
-        y=times_dqn_ms,
+        y=inference_times_dqn_us,
         name='DQN',
         boxmean='sd'
     ))
     fig_inf_box.add_trace(go.Box(
-        y=times_ppo_ms,
+        y=inference_times_ppo_us,
         name='PPO',
         boxmean='sd'
     ))
     fig_inf_box.update_layout(
-        title='Inference Time (ms): DQN vs. PPO',
-        yaxis_title='Zeit (ms)'
+        title='Inference Time (µs): DQN vs. PPO',
+        yaxis_title='Zeit (µs)'  # Aktualisierte Achsenbeschriftung
     )
-    fig_inf_box.write_image(os.path.join(save_dir, "boxplot_inference_times.png"))
+    fig_inf_box.write_image(os.path.join(save_dir, "boxplot_inference_times_us.png"))
     fig_inf_box.show()
 
     # ------------------------------------------------------------
-    # Plot 7: Histogramm der Inference-Zeiten
+    # Plot 7: Histogramm der Inference-Zeiten (Mikrosekunden)
     # ------------------------------------------------------------
     fig_inf_hist = go.Figure()
     fig_inf_hist.add_trace(go.Histogram(
-        x=times_dqn_ms,
+        x=inference_times_dqn_us,
         name='DQN',
         opacity=0.7
     ))
     fig_inf_hist.add_trace(go.Histogram(
-        x=times_ppo_ms,
+        x=inference_times_ppo_us,
         name='PPO',
         opacity=0.7
     ))
     fig_inf_hist.update_layout(
         barmode='overlay',
-        title='Histogramm: Inference Time (ms)',
-        xaxis_title='Zeit (ms)',
+        title='Histogramm: Inference Time (µs)',
+        xaxis_title='Zeit (µs)',
         yaxis_title='Anzahl',
         bargap=0.2
     )
     fig_inf_hist.update_traces(opacity=0.75)
-    fig_inf_hist.write_image(os.path.join(save_dir, "histogram_inference_times.png"))
+    fig_inf_hist.write_image(os.path.join(save_dir, "histogram_inference_times_us.png"))
     fig_inf_hist.show()
 
     # ------------------------------------------------------------
     # Zusätzliche Plots für Robustheitsmetriken
     # ------------------------------------------------------------
 
-    # Plot 8: Vergleich der minimalen und maximalen Rewards
-    categories = ["Min Reward", "Max Reward"]
-    dqn_values = [min_reward_dqn, max_reward_dqn]
-    ppo_values = [min_reward_ppo, max_reward_ppo]
+    # Plot 8: Vergleich der minimalen und maximalen Scores
+    categories = ["Min Score", "Max Score"]
+    dqn_values = [min_score_dqn, max_score_dqn]
+    ppo_values = [min_score_ppo, max_score_ppo]
 
     fig_min_max = go.Figure(data=[
         go.Bar(name='DQN', x=categories, y=dqn_values, marker_color='skyblue'),
         go.Bar(name='PPO', x=categories, y=ppo_values, marker_color='salmon')
     ])
     fig_min_max.update_layout(
-        title='Vergleich der minimalen und maximalen Rewards',
+        title='Vergleich der minimalen und maximalen Scores',
         xaxis_title='Kategorie',
-        yaxis_title='Reward',
+        yaxis_title='Score',
         barmode='group'
     )
-    fig_min_max.write_image(os.path.join(save_dir, "min_max_rewards_comparison.png"))
+    fig_min_max.write_image(os.path.join(save_dir, "min_max_scores_comparison.png"))
     fig_min_max.show()
 
     # Optional: Weitere Robustheitsmetriken hinzufügen
 
-    print("Alle Vergleichsmetriken wurden geplottet und im Verzeichnis 'diagrams' gespeichert.")
+    print("Alle Vergleichsmetriken wurden geplottet und im Verzeichnis 'diagrams1' gespeichert.")
