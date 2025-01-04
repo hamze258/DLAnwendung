@@ -88,7 +88,7 @@ class FlappyBirdEnv(gym.Env):
         # Belohnung oder Strafe basierend auf der relativen Höhe zur nächsten Pipe
         next_pipe = self._get_next_pipe()
         if next_pipe:
-            pipe_mid = (next_pipe[0].y + next_pipe[1].y) / 2 / self.config.window.viewport_height
+            pipe_mid = (next_pipe[0].bottom_y + next_pipe[1].y) / 2 / self.config.window.viewport_height
             relative_height = self.player.y / self.config.window.viewport_height - pipe_mid
             reward += (1 - abs(relative_height)) * 2
         else:
@@ -196,10 +196,32 @@ class FlappyBirdEnv(gym.Env):
                 # Update des Displays
                 pygame.display.update()
                 self.config.clock.tick(self.config.fps)
+        
         elif mode == "rgb_array":
             self.config.screen.fill((0, 0, 0))
             self.background.draw()
             self.pipes.draw()
+
+            # Zeichne Rechtecke für die Lücken der Pipes
+            next_pipe = self._get_next_pipe()
+            if next_pipe:
+                upper_pipe, lower_pipe = next_pipe
+                pipe_x = upper_pipe.x
+                pipe_width = upper_pipe.w
+                pipe_gap_top = upper_pipe.bottom_y + upper_pipe.h  # Unterkante der oberen Pipe
+                pipe_gap_bottom = lower_pipe.y
+
+                pygame.draw.rect(
+                    self.config.screen,
+                    (0, 255, 0),  # Grüne Farbe
+                    pygame.Rect(
+                        pipe_x,
+                        pipe_gap_top,
+                        pipe_width,
+                        pipe_gap_bottom - pipe_gap_top,
+                    ),
+                    2,  # Linienbreite
+                )
             self.floor.draw()
             self.player.draw()
             self.score.draw()
