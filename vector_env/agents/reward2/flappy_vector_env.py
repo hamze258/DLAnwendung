@@ -62,6 +62,7 @@ class FlappyBirdEnv(gym.Env):
         return self._get_observation(), {}
 
     def step(self, action):
+
         if action == 1:
             self.player.flap()
 
@@ -71,7 +72,8 @@ class FlappyBirdEnv(gym.Env):
         self.floor.tick()
         self.player.tick()
 
-        reward = 0.1
+        reward = 0
+
         if self.player.collided(self.pipes, self.floor):
             self.gameover = True
             reward = -1
@@ -83,12 +85,18 @@ class FlappyBirdEnv(gym.Env):
                 reward += 1.0
                 pipe.scored = True
 
-        # Reward for maintaining position near pipe center
+        # Belohnung oder Strafe basierend auf der relativen Höhe zur nächsten Pipe
         next_pipe = self._get_next_pipe()
         if next_pipe:
             pipe_mid = (next_pipe[0].y + next_pipe[1].y) / 2 / self.config.window.viewport_height
             relative_height = self.player.y / self.config.window.viewport_height - pipe_mid
-            reward -= abs(relative_height)  # Penalize deviation from the center
+            reward -= abs(relative_height) / 10  # Strafung für Abweichung von der Mitte
+        else:
+            # Hier belohnen wir den Vogel dafür, dass er eine geringe vertikale Geschwindigkeit hat
+            target_velocity = 0.0
+            velocity_penalty_factor = 0.1  # Anpassbarer Faktor
+            velocity_penalty = abs(self.player.vel_y - target_velocity) * velocity_penalty_factor
+            reward -= velocity_penalty
 
         observation = self._get_observation()
         done = self.gameover

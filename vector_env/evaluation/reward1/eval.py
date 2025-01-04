@@ -42,12 +42,6 @@ def evaluate_model(model, env, n_episodes=1000):
 
         rewards_all_episodes.append(total_reward)
         
-        # Optional: Definition einer erfolgreichen Episode
-        # if total_reward >= threshold:
-        #     success_episodes += 1
-
-    # Optional: Erfolgsrate berechnen
-    # success_rate = success_episodes / n_episodes
 
     return rewards_all_episodes, inference_times  #, success_rate
 

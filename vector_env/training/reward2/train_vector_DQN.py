@@ -230,6 +230,8 @@ if __name__ == "__main__":
 
     # GPU oder CPU?
     device = "cuda" if torch.cuda.is_available() else "cpu"
+    if torch.cuda.device_count() > 1:
+        device = "cuda:1"
 
     # DQN-Modell
     model = DQN(

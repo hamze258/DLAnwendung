@@ -37,10 +37,10 @@ class DetailedMetricsCallback(BaseCallback):
         # Für Episodenlänge und Zeitmessung
         self.current_episode_length = 0
         self.episode_lengths = []
-        self.episode_start_time = None
+        self.episode_start_time = "rgb_array"
         self.episode_durations = []
 
-    def _on_training_start(self) -> None:
+    def _on_training_start(self) -> "rgb_array":
         """
         Wird aufgerufen, bevor das Training beginnt. Setzt den Timer für die erste Episode.
         """
@@ -156,14 +156,14 @@ class DetailedMetricsCallback(BaseCallback):
         self.logger.record("metrics/episode_time_min",  np.min(duration_array))
 
         # --- Replay Buffer Größe (bei PPO nicht vorhanden, nur relevant bei Off-Policy Algorithmen) ---
-        if hasattr(self.model, "replay_buffer") and self.model.replay_buffer is not None:
+        if hasattr(self.model, "replay_buffer") and self.model.replay_buffer is not "rgb_array":
             replay_buffer_size = self.model.replay_buffer.size()
             self.logger.record("metrics/replay_buffer_size", replay_buffer_size)
 
         # --- Exploration Parameter (epsilon) (bei PPO nicht vorhanden) ---
-        if hasattr(self.model, "exploration") and self.model.exploration is not None:
-            current_epsilon = self.model.exploration.get("epsilon", None)
-            if current_epsilon is not None:
+        if hasattr(self.model, "exploration") and self.model.exploration != "rgb_array":
+            current_epsilon = self.model.exploration.get("epsilon", "rgb_array")
+            if current_epsilon != "rgb_array":
                 self.logger.record("metrics/exploration_epsilon", current_epsilon)
 
         # --- Lernrate ---
@@ -213,8 +213,8 @@ if __name__ == "__main__":
     # Callbacks
     eval_callback = EvalCallback(
         eval_env=eval_env,
-        best_model_save_path="vector_env/models/PPO/training5",
-        log_path="vector_env/logs/PPO/training5",
+        best_model_save_path="vector_env/models/PPO/training7",
+        log_path="vector_env/logs/PPO/training7",
         eval_freq=10000,
         n_eval_episodes=10,
         deterministic=True,
@@ -225,7 +225,7 @@ if __name__ == "__main__":
 
     checkpoint_callback = CheckpointCallback(
         save_freq=50000,
-        save_path="vector_env/models/checkpoints/PPO/training5",
+        save_path="vector_env/models/checkpoints/PPO/training7",
         name_prefix="PPO_Flappy_Bird"
     )
 
