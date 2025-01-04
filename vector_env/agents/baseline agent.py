@@ -1,5 +1,5 @@
 
-from agents.flappy_vector_env import FlappyBirdEnv
+from vector_env.agents.reward1.flappy_vector_env import FlappyBirdEnv
 import os
 import time
 import imageio
@@ -18,7 +18,7 @@ env = FlappyBirdEnv(render_mode="rgb_array")
 num_episodes = 2  # Ändern Sie dies auf die gewünschte Anzahl
 
 # Video Writer mit imageio
-fps = 20  # Frames pro Sekunde
+fps = 30  # Frames pro Sekunde
 with imageio.get_writer(video_path, fps=fps) as video:
     for episode in range(num_episodes):
         try:

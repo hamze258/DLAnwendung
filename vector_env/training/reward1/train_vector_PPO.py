@@ -213,8 +213,8 @@ if __name__ == "__main__":
     # Callbacks
     eval_callback = EvalCallback(
         eval_env=eval_env,
-        best_model_save_path="vector_env/models/PPO/training3",
-        log_path="vector_env/logs/PPO/training3",
+        best_model_save_path="vector_env/models/PPO/training4",
+        log_path="vector_env/logs/PPO/training4",
         eval_freq=10000,
         n_eval_episodes=10,
         deterministic=True,
@@ -225,7 +225,7 @@ if __name__ == "__main__":
 
     checkpoint_callback = CheckpointCallback(
         save_freq=50000,
-        save_path="vector_env/models/checkpoints/PPO/training3",
+        save_path="vector_env/models/checkpoints/PPO/training4",
         name_prefix="PPO_Flappy_Bird"
     )
 

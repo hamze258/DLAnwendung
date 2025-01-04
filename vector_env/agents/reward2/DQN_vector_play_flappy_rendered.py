@@ -40,7 +40,7 @@ with imageio.get_writer(video_path, fps=fps) as video:
 
         while not done:
             # Render frame als RGB-Array
-            frame = env.render()
+            frame = env.envs[0].render()
             video.append_data(frame)
 
             action, _ = model.predict(obs, deterministic=True)
