@@ -88,9 +88,10 @@ class FlappyBirdEnv(gym.Env):
         # Belohnung oder Strafe basierend auf der relativen Höhe zur nächsten Pipe
         next_pipe = self._get_next_pipe()
         if next_pipe:
-            pipe_mid = (next_pipe[0].bottom_y + next_pipe[1].y) / 2 / self.config.window.viewport_height
-            relative_height = self.player.y / self.config.window.viewport_height - pipe_mid
-            reward += (1 - abs(relative_height)) * 2
+            bird_y = self.player.y / self.config.window.viewport_height
+            pipe_mid = (next_pipe[0].bottom_y + next_pipe[1].y) / 2
+            relative_height = (self.player.y - pipe_mid) / self.config.window.viewport_height
+            reward -= (abs(relative_height) / 10) + (bird_y > pipe_mid + 0.2) * 0.5
         else:
             # Hier belohnen wir den Vogel dafür, dass er eine geringe vertikale Geschwindigkeit hat
             target_velocity = 0.0
@@ -208,7 +209,7 @@ class FlappyBirdEnv(gym.Env):
                 upper_pipe, lower_pipe = next_pipe
                 pipe_x = upper_pipe.x
                 pipe_width = upper_pipe.w
-                pipe_gap_top = upper_pipe.bottom_y + upper_pipe.h  # Unterkante der oberen Pipe
+                pipe_gap_top = upper_pipe.bottom_y
                 pipe_gap_bottom = lower_pipe.y
 
                 pygame.draw.rect(

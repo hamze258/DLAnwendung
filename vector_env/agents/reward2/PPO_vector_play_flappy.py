@@ -9,10 +9,10 @@ import keyboard
 env = DummyVecEnv([lambda: FlappyBirdEnv(render_mode="human")])
 
 # Gelerntes Modell laden
-model = PPO.load(r"vector_env\models\PPO\training7\best_model.zip")
+model = PPO.load(r"vector_env\models\checkpoints\PPO\training9\PPO_Flappy_Bird_450000_steps.zip")
 
 try:
-    for i in range(15):  # Äußere Schleife für kontinuierliches Spielen
+    for i in range(100):  # Äußere Schleife für kontinuierliches Spielen
         obs = env.reset()
         done = False
         while not done:

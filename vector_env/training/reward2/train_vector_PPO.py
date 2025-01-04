@@ -213,8 +213,8 @@ if __name__ == "__main__":
     # Callbacks
     eval_callback = EvalCallback(
         eval_env=eval_env,
-        best_model_save_path="vector_env/models/PPO/training7",
-        log_path="vector_env/logs/PPO/training7",
+        best_model_save_path="vector_env/models/PPO/training10",
+        log_path="vector_env/logs/PPO/training10",
         eval_freq=10000,
         n_eval_episodes=10,
         deterministic=True,
@@ -225,12 +225,12 @@ if __name__ == "__main__":
 
     checkpoint_callback = CheckpointCallback(
         save_freq=50000,
-        save_path="vector_env/models/checkpoints/PPO/training7",
+        save_path="vector_env/models/checkpoints/PPO/training10",
         name_prefix="PPO_Flappy_Bird"
     )
 
     # GPU oder CPU?
-    device = "cuda" if torch.cuda.is_available() else "cpu"
+    device = "cpu"
 
     # PPO-Modell
     model = PPO(
