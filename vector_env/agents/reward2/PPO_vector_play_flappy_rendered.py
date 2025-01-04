@@ -6,7 +6,7 @@ import imageio
 #DQN_vector_plays_flappy.py
 from stable_baselines3.common.vec_env import DummyVecEnv
 from stable_baselines3 import PPO
-from vector_env.agents.flappy_vector_env import FlappyBirdEnv
+from vector_env.agents.reward2.flappy_vector_env import FlappyBirdEnv
 import time
 
 # Videoausgabeordner erstellen
@@ -27,7 +27,7 @@ env = DummyVecEnv([lambda: FlappyBirdEnv(render_mode="rgb_array")])
 
 
 # Anzahl der Episoden, die Sie aufzeichnen möchten
-num_episodes = 2  # Ändern Sie dies auf die gewünschte Anzahl
+num_episodes = 15  # Ändern Sie dies auf die gewünschte Anzahl
 
 # Video Writer mit imageio
 fps = 30  # Frames pro Sekunde
@@ -40,7 +40,7 @@ with imageio.get_writer(video_path, fps=fps) as video:
 
         while not done:
             # Render frame als RGB-Array
-            frame = env.render()
+            frame = env.envs[0].render()
             video.append_data(frame)
 
             action, _ = model.predict(obs, deterministic=True)

@@ -1,6 +1,6 @@
 from stable_baselines3.common.vec_env import DummyVecEnv
 from stable_baselines3 import PPO
-from envs.image_env.flappy_image_env import FlappyBirdEnv
+from img_env.flappy_image_env import FlappyBirdEnv
 import keyboard
 
 # Umgebung einpacken

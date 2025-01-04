@@ -7,7 +7,7 @@ from stable_baselines3.common.env_checker import check_env
 from stable_baselines3.common.vec_env import DummyVecEnv
 from stable_baselines3.common.callbacks import EvalCallback, CheckpointCallback, BaseCallback
 
-from vector_env.agents.flappy_vector_env import FlappyBirdEnv
+from vector_env.agents.reward2.flappy_vector_env import FlappyBirdEnv
 # from stable_baselines3.common.vec_env import VecTransposeImage  # Falls gebraucht für Bildobservations
 
 

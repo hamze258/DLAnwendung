@@ -1,7 +1,7 @@
 #DQN_vector_plays_flappy.py
 from stable_baselines3.common.vec_env import DummyVecEnv
 from stable_baselines3 import DQN
-from vector_env.agents.flappy_vector_env import FlappyBirdEnv
+from vector_env.agents.reward2.flappy_vector_env import FlappyBirdEnv
 import keyboard
 
 # Wrappen im VecEnv
