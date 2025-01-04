@@ -72,7 +72,7 @@ class FlappyBirdEnv(gym.Env):
         self.floor.tick()
         self.player.tick()
 
-        reward = 0
+        reward = 0.1
 
         if self.player.collided(self.pipes, self.floor):
             self.gameover = True
@@ -90,7 +90,7 @@ class FlappyBirdEnv(gym.Env):
         if next_pipe:
             pipe_mid = (next_pipe[0].y + next_pipe[1].y) / 2 / self.config.window.viewport_height
             relative_height = self.player.y / self.config.window.viewport_height - pipe_mid
-            reward -= abs(relative_height) / 10  # Strafung für Abweichung von der Mitte
+            reward += (1 - abs(relative_height)) * 2
         else:
             # Hier belohnen wir den Vogel dafür, dass er eine geringe vertikale Geschwindigkeit hat
             target_velocity = 0.0
@@ -118,7 +118,7 @@ class FlappyBirdEnv(gym.Env):
         if next_pipe:
             upper_pipe, lower_pipe = next_pipe
             next_pipe_x = (upper_pipe.x - self.player.x) / self.config.window.width
-            next_pipe_top_y = upper_pipe.y / self.config.window.viewport_height
+            next_pipe_top_y = upper_pipe.bottom_y / self.config.window.viewport_height
             next_pipe_bottom_y = lower_pipe.y / self.config.window.viewport_height
             pipe_mid = (next_pipe_top_y + next_pipe_bottom_y) / 2
             relative_height = bird_y - pipe_mid
@@ -159,15 +159,43 @@ class FlappyBirdEnv(gym.Env):
                 if event.type == pygame.QUIT:
                     self.close()
 
-        if mode == "human" and self.window:
-            self.config.screen.fill((0, 0, 0))
-            self.background.draw()
-            self.pipes.draw()
-            self.floor.draw()
-            self.player.draw()
-            self.score.draw()
-            pygame.display.update()
-            self.config.clock.tick(self.config.fps)
+            if self.window:
+                # Hintergrund löschen
+                self.config.screen.fill((0, 0, 0))
+                
+                # Zeichne Hintergrund, Pipes, Boden und Spieler
+                self.background.draw()
+                self.pipes.draw()
+
+                # Zeichne Rechtecke für die Lücken der Pipes
+                next_pipe = self._get_next_pipe()
+                if next_pipe:
+                    upper_pipe, lower_pipe = next_pipe
+                    pipe_x = upper_pipe.x
+                    pipe_width = upper_pipe.w
+                    pipe_gap_top = upper_pipe.bottom_y
+                    pipe_gap_bottom = lower_pipe.y
+
+                    pygame.draw.rect(
+                        self.config.screen,
+                        (0, 255, 0),  # Grüne Farbe
+                        pygame.Rect(
+                            pipe_x,
+                            pipe_gap_top,
+                            pipe_width,
+                            pipe_gap_bottom - pipe_gap_top,
+                        ),
+                        2,  # Linienbreite
+                    )
+
+                # Zeichne Boden, Spieler und Punkte
+                self.floor.draw()
+                self.player.draw()
+                self.score.draw()
+
+                # Update des Displays
+                pygame.display.update()
+                self.config.clock.tick(self.config.fps)
         elif mode == "rgb_array":
             self.config.screen.fill((0, 0, 0))
             self.background.draw()

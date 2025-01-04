@@ -10,6 +10,12 @@ class Pipe(Entity):
         super().__init__(*args, **kwargs)
         self.vel_x = -5
         self.scored = False  # Neue Eigenschaft
+        self.h = self.image.get_height() if self.image else 0  # Höhe der Pipe
+    
+    @property
+    def bottom_y(self):
+        """Berechnet die y-Koordinate des unteren Endes der Pipe."""
+        return self.y + self.h  # Unterkante der Pipe
         
 
     def draw(self) -> None:

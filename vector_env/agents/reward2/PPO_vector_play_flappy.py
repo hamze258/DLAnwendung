@@ -19,7 +19,7 @@ try:
             action, _ = model.predict(obs, deterministic=True)
             obs, reward, done, info = env.step(action)
             #time.sleep(0.02)
-            #env.render()
+            env.render()
 
             if keyboard.is_pressed('q'):  # Prüfen, ob 'q' gedrückt wurde
                 print("Spiel manuell beendet.")

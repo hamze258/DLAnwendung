@@ -14,11 +14,11 @@ video_dir = r"vector_env\videos"
 os.makedirs(video_dir, exist_ok=True)
 
 
-model = PPO.load(r"vector_env\models\PPO\training1\best_model")
+model = PPO.load(r"vector_env\models\PPO\training7\best_model")
 
 
 # Name des Videos
-video_path = os.path.join(video_dir, "PPO_1.mp4")
+video_path = os.path.join(video_dir, "PPO_2.mp4")
 
 # Umgebung erstellen mit "rgb_array" Render-Modus
 #env = FlappyBirdEnv(render_mode="rgb_array")
@@ -30,7 +30,7 @@ env = DummyVecEnv([lambda: FlappyBirdEnv(render_mode="rgb_array")])
 num_episodes = 15  # Ändern Sie dies auf die gewünschte Anzahl
 
 # Video Writer mit imageio
-fps = 30  # Frames pro Sekunde
+fps = 20  # Frames pro Sekunde
 
 with imageio.get_writer(video_path, fps=fps) as video:
     for episode in range(num_episodes):
