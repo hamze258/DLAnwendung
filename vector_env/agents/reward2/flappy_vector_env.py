@@ -33,8 +33,8 @@ class FlappyBirdEnv(gym.Env):
 
         self.action_space = spaces.Discrete(2)  # 0 = do nothing, 1 = flap
         self.observation_space = spaces.Box(
-            low=np.array([0, -10, 0, 0, 0, -1], dtype=np.float32),
-            high=np.array([1, 10, 2, 2, 2, 1], dtype=np.float32),  # Added relative height
+            low=np.array([0.0, -10.0, 0.0, 0.0, 0.0, -1.0, 0.0, 0.0], dtype=np.float32),
+            high=np.array([1.0, 10.0, 2.0, 2.0, 2.0, 1.0, 1.0, 2.0], dtype=np.float32),
             dtype=np.float32
         )
 
@@ -72,7 +72,7 @@ class FlappyBirdEnv(gym.Env):
         self.floor.tick()
         self.player.tick()
 
-        reward = 0.1
+        reward = 0
 
         if self.player.collided(self.pipes, self.floor):
             self.gameover = True
@@ -89,9 +89,18 @@ class FlappyBirdEnv(gym.Env):
         next_pipe = self._get_next_pipe()
         if next_pipe:
             bird_y = self.player.y / self.config.window.viewport_height
-            pipe_mid = (next_pipe[0].bottom_y + next_pipe[1].y) / 2
-            relative_height = (self.player.y - pipe_mid) / self.config.window.viewport_height
-            reward -= (abs(relative_height) / 10) + (bird_y > pipe_mid + 0.2) * 0.5
+            pipe_mid = ((next_pipe[0].bottom_y + next_pipe[1].y) / 2) / self.config.window.viewport_height
+            relative_height = bird_y - pipe_mid
+
+            # Belohnung für Nähe zur Mitte der Pipe-Gap
+            # Je näher an der Mitte, desto höher die Belohnung
+            reward += (1 - abs(relative_height))
+
+            # Zusätzliche Belohnung, wenn der Vogel nicht zu hoch fliegt
+            if bird_y <= pipe_mid + 0.2:
+                reward += 0.5  # Höhere Belohnung, wenn der Vogel unter der oberen Pipe bleibt
+            else:
+                reward += 0.1  # Geringere Belohnung, wenn der Vogel etwas zu hoch fliegt
         else:
             # Hier belohnen wir den Vogel dafür, dass er eine geringe vertikale Geschwindigkeit hat
             target_velocity = 0.0
@@ -112,7 +121,7 @@ class FlappyBirdEnv(gym.Env):
 
     def _get_observation(self):
         bird_y = self.player.y / self.config.window.viewport_height
-        bird_velocity = self.player.vel_y / 10
+        bird_velocity = self.player.vel_y / 10.0
 
         next_pipe = self._get_next_pipe()
 
@@ -121,24 +130,45 @@ class FlappyBirdEnv(gym.Env):
             next_pipe_x = (upper_pipe.x - self.player.x) / self.config.window.width
             next_pipe_top_y = upper_pipe.bottom_y / self.config.window.viewport_height
             next_pipe_bottom_y = lower_pipe.y / self.config.window.viewport_height
-            pipe_mid = (next_pipe_top_y + next_pipe_bottom_y) / 2
+            pipe_mid = (next_pipe_top_y + next_pipe_bottom_y) / 2.0
             relative_height = bird_y - pipe_mid
+
+            # Berechnung der Pipe-Breite, normalisiert
+            pipe_width = upper_pipe.w / self.config.window.width
+
+            # Berechnung der Pipe-Lückengröße, normalisiert
+            pipe_gap_size = (lower_pipe.y - upper_pipe.bottom_y) / self.config.window.viewport_height
         else:
             next_pipe_x = 2.0
             next_pipe_top_y = 1.0
             next_pipe_bottom_y = 1.0
             relative_height = 0.0
+            pipe_width = 0.0
+            pipe_gap_size = 0.0  # Optional
 
+        # Clipping der Werte
         bird_y = np.clip(bird_y, 0.0, 1.0)
         bird_velocity = np.clip(bird_velocity, -10.0, 10.0)
         next_pipe_x = np.clip(next_pipe_x, 0.0, 2.0)
         next_pipe_top_y = np.clip(next_pipe_top_y, 0.0, 2.0)
         next_pipe_bottom_y = np.clip(next_pipe_bottom_y, 0.0, 2.0)
         relative_height = np.clip(relative_height, -1.0, 1.0)
+        pipe_width = np.clip(pipe_width, 0.0, 1.0)
+        pipe_gap_size = np.clip(pipe_gap_size, 0.0, 2.0)
 
-        observation = np.array([bird_y, bird_velocity, next_pipe_x, next_pipe_top_y, next_pipe_bottom_y, relative_height], dtype=np.float32)
+        observation = np.array([
+            bird_y,
+            bird_velocity,
+            next_pipe_x,
+            next_pipe_top_y,
+            next_pipe_bottom_y,
+            relative_height,
+            pipe_width,
+            pipe_gap_size
+        ], dtype=np.float32)
 
         return observation
+
 
     def _get_next_pipe(self):
         next_pipe = None
@@ -188,6 +218,49 @@ class FlappyBirdEnv(gym.Env):
                         ),
                         2,  # Linienbreite
                     )
+                
+                # **Kollisionsbereiche zur Debugging-Zwecken zeichnen**
+                pygame.draw.rect(
+                    self.config.screen,
+                    (255, 0, 0),  # Rote Farbe für Kollisionsbereiche
+                    pygame.Rect(
+                        self.player.x, 
+                        self.player.y, 
+                        self.player.width, 
+                        self.player.height
+                    ),
+                    2,  # Linienbreite
+                )
+                for upper_pipe, lower_pipe in zip(self.pipes.upper, self.pipes.lower):
+                    pygame.draw.rect(
+                        self.config.screen,
+                        (255, 0, 0),
+                        pygame.Rect(
+                            upper_pipe.x, 
+                            upper_pipe.y, 
+                            upper_pipe.w, 
+                            upper_pipe.h
+                        ),
+                        2,
+                    )
+                    pygame.draw.rect(
+                        self.config.screen,
+                        (255, 0, 0),
+                        pygame.Rect(
+                            lower_pipe.x, 
+                            lower_pipe.y, 
+                            lower_pipe.w, 
+                            lower_pipe.h
+                        ),
+                        2,
+                    )
+
+                # **Beobachtungswerte anzeigen**
+                font = pygame.font.SysFont(None, 24)
+                observation = self._get_observation()
+                obs_text = f"Obs: {observation}"
+                text_surface = font.render(obs_text, True, (255, 255, 255))
+                self.config.screen.blit(text_surface, (10, 10))
 
                 # Zeichne Boden, Spieler und Punkte
                 self.floor.draw()

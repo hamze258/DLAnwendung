@@ -9,7 +9,7 @@ import keyboard
 env = DummyVecEnv([lambda: FlappyBirdEnv(render_mode="human")])
 
 # Gelerntes Modell laden
-model = PPO.load(r"vector_env\models\checkpoints\PPO\training9\PPO_Flappy_Bird_450000_steps.zip")
+model = PPO.load(r"vector_env\models\PPO\training10\best_model.zip")
 
 try:
     for i in range(100):  # Äußere Schleife für kontinuierliches Spielen
@@ -19,7 +19,7 @@ try:
             action, _ = model.predict(obs, deterministic=True)
             obs, reward, done, info = env.step(action)
             #time.sleep(0.02)
-            env.render()
+            #env.render()
 
             if keyboard.is_pressed('q'):  # Prüfen, ob 'q' gedrückt wurde
                 print("Spiel manuell beendet.")
