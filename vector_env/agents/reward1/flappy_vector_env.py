@@ -103,8 +103,8 @@ class FlappyBirdEnv(gym.Env):
         # Episode beenden, wenn Spiel vorbei ist
         done = self.gameover
         info = {"score": self.score.score}
-        # if self.gameover:
-        #     print(f"Total Reward for Episode: {self.score.score}")
+        if self.gameover:
+            print(f"Total Reward for Episode: {self.score.score}")
 
         self.step_count += 1
 

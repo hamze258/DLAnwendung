@@ -8,10 +8,10 @@ import keyboard
 env = DummyVecEnv([lambda: FlappyBirdEnv(render_mode=None)])
 
 # Gelerntes Modell laden
-model = DQN.load(r"vector_env\models\DQN\training4\best_model.zip")
+model = DQN.load(r"vector_env\models\DQN\training6\best_model.zip")
 
 try:
-    for i in range(5):  # Äußere Schleife für kontinuierliches Spielen
+    for i in range(50):  # Äußere Schleife für kontinuierliches Spielen
         obs = env.reset()
         done = False
         while not done:
