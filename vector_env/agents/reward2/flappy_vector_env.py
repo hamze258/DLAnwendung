@@ -268,6 +268,7 @@ class FlappyBirdEnv(gym.Env):
         
         elif mode == "rgb_array":
             self.config.screen.fill((0, 0, 0))
+            # Zeichne Hintergrund, Pipes, Boden und Spieler
             self.background.draw()
             self.pipes.draw()
 
@@ -291,6 +292,51 @@ class FlappyBirdEnv(gym.Env):
                     ),
                     2,  # Linienbreite
                 )
+            
+            # **Kollisionsbereiche zur Debugging-Zwecken zeichnen**
+            pygame.draw.rect(
+                self.config.screen,
+                (255, 0, 0),  # Rote Farbe für Kollisionsbereiche
+                pygame.Rect(
+                    self.player.x, 
+                    self.player.y, 
+                    self.player.w, 
+                    self.player.h
+                ),
+                2,  # Linienbreite
+            )
+            for upper_pipe, lower_pipe in zip(self.pipes.upper, self.pipes.lower):
+                pygame.draw.rect(
+                    self.config.screen,
+                    (255, 0, 0),
+                    pygame.Rect(
+                        upper_pipe.x, 
+                        upper_pipe.y, 
+                        upper_pipe.w, 
+                        upper_pipe.h
+                    ),
+                    2,
+                )
+                pygame.draw.rect(
+                    self.config.screen,
+                    (255, 0, 0),
+                    pygame.Rect(
+                        lower_pipe.x, 
+                        lower_pipe.y, 
+                        lower_pipe.w, 
+                        lower_pipe.h
+                    ),
+                    2,
+                )
+
+            # **Beobachtungswerte anzeigen**
+            font = pygame.font.SysFont(None, 24)
+            observation = self._get_observation()
+            obs_text = f"Obs: {observation}"
+            text_surface = font.render(obs_text, True, (255, 255, 255))
+            self.config.screen.blit(text_surface, (10, 10))
+
+            # Zeichne Boden, Spieler und Punkte
             self.floor.draw()
             self.player.draw()
             self.score.draw()
@@ -322,11 +368,3 @@ def create_headless_config():
         sounds=sounds,
     )
 
-# Observation Space erweitert:
-
-# Relativer Abstand zur Mitte der Pipe (relative_height).
-# Horizontaler Abstand zur nächsten Pipe.
-# Reward-Funktion angepasst:
-
-# Bestrafung bei Abweichung von der Pipe-Mitte.
-# Belohnung für das Passieren von Pipes.
