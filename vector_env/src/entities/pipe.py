@@ -20,7 +20,7 @@ class Pipe(Entity):
 
     def tick(self) -> None:
         """Aktualisiert die Position der Pipe."""
-        self.x += self.vel_x  # Bewegung hier handhaben
+        self.x += self.vel_x
         self.draw()
 
     def draw(self) -> None:

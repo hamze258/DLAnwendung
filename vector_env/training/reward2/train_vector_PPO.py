@@ -213,8 +213,8 @@ if __name__ == "__main__":
     # Callbacks
     eval_callback = EvalCallback(
         eval_env=eval_env,
-        best_model_save_path="vector_env/models/PPO/training14",
-        log_path="vector_env/logs/PPO/training14",
+        best_model_save_path="vector_env/models/PPO/training15",
+        log_path="vector_env/logs/PPO/training15",
         eval_freq=10000,
         n_eval_episodes=10,
         deterministic=True,
@@ -225,7 +225,7 @@ if __name__ == "__main__":
 
     checkpoint_callback = CheckpointCallback(
         save_freq=50000,
-        save_path="vector_env/models/checkpoints/PPO/training14",
+        save_path="vector_env/models/checkpoints/PPO/training15",
         name_prefix="PPO_Flappy_Bird"
     )
 
@@ -237,14 +237,14 @@ if __name__ == "__main__":
         policy="MlpPolicy",
         env=vec_env,
         verbose=1,
-        learning_rate=1e-4,   
+        learning_rate=1e-3,   
         n_steps=1024,         
         batch_size=64,        
         n_epochs=10,          
         gamma=0.995,           
         gae_lambda=0.95,      
-        clip_range=0.1,       
-        ent_coef=0.01,        
+        clip_range=0.2,       
+        ent_coef=0.05,      
         tensorboard_log="tensorboard/PPO",
         device=device
     )
