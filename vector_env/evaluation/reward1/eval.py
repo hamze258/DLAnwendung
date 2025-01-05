@@ -115,11 +115,11 @@ if __name__ == "__main__":
     # ------------------------------------------------------------
     # 0) Sicherstellen, dass das Verzeichnis existiert
     # ------------------------------------------------------------
-    save_dir = os.path.join("vector_env", "evaluation", "reward1", "metriken")
+    save_dir = os.path.join("vector_env", "evaluation", "reward1", "metriken1")
     os.makedirs(save_dir, exist_ok=True)
 
     # 1) Environment erstellen (ggf. mit render=False)
-    env = DummyVecEnv([lambda: FlappyBirdEnv()])
+    env = DummyVecEnv([lambda: FlappyBirdEnv(render_mode="rgb_array")])
 
     # 2) Zwei vortrainierte Modelle laden
     model_dqn1 = DQN.load(r"vector_env\models\DQN\training6\best_model.zip")
@@ -135,7 +135,7 @@ if __name__ == "__main__":
 
     # 3) Anzahl der Episoden für den Vergleich
     num_episodes = 100  # Geändert von 1000 auf 100
-    max_steps_per_episode = 100000  # Maximale Schritte pro Episode
+    max_steps_per_episode = 1000  # Maximale Schritte pro Episode
 
     # 4) Modelle auswerten
     scores_dqn, rewards_dqn = evaluate_model(
