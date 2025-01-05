@@ -7,7 +7,7 @@ from stable_baselines3.common.env_checker import check_env
 from stable_baselines3.common.vec_env import DummyVecEnv
 from stable_baselines3.common.callbacks import EvalCallback, CheckpointCallback, BaseCallback
 
-from vector_env.agents.reward2.flappy_vector_env import FlappyBirdEnv
+from vector_env.agents.reward3.flappy_vector_env import FlappyBirdEnv
 # from stable_baselines3.common.vec_env import VecTransposeImage  # Falls gebraucht für Bildobservations
 
 
@@ -213,8 +213,8 @@ if __name__ == "__main__":
     # Callbacks
     eval_callback = EvalCallback(
         eval_env=eval_env,
-        best_model_save_path="vector_env/models/PPO/training2",
-        log_path="vector_env/logs/PPO/training2",
+        best_model_save_path="vector_env/models/PPO/training16",
+        log_path="vector_env/logs/PPO/training16",
         eval_freq=10000,
         n_eval_episodes=10,
         deterministic=True,
@@ -225,26 +225,26 @@ if __name__ == "__main__":
 
     checkpoint_callback = CheckpointCallback(
         save_freq=50000,
-        save_path="vector_env/models/checkpoints/PPO/training2",
+        save_path="vector_env/models/checkpoints/PPO/training16",
         name_prefix="PPO_Flappy_Bird"
     )
 
     # GPU oder CPU?
-    device = "cuda" if torch.cuda.is_available() else "cpu"
+    device = "cpu"
 
     # PPO-Modell
     model = PPO(
         policy="MlpPolicy",
         env=vec_env,
         verbose=1,
-        learning_rate=1e-4,   
+        learning_rate=1e-3,   
         n_steps=1024,         
         batch_size=64,        
         n_epochs=10,          
         gamma=0.995,           
         gae_lambda=0.95,      
-        clip_range=0.1,       
-        ent_coef=0.01,        
+        clip_range=0.2,       
+        ent_coef=0.05,      
         tensorboard_log="tensorboard/PPO",
         device=device
     )

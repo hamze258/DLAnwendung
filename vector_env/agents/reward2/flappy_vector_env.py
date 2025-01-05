@@ -65,8 +65,8 @@ class FlappyBirdEnv(gym.Env):
 
         observation = self._get_observation()
 
-        # if self.render_mode in ["human", "rgb_array"]:
-        #     self.render()
+        if self.render_mode in ["human", "rgb_array"]:
+            self.render()
 
         self.background.tick()
         self.score.tick()
@@ -368,11 +368,3 @@ def create_headless_config():
         sounds=sounds,
     )
 
-# Observation Space erweitert:
-
-# Relativer Abstand zur Mitte der Pipe (relative_height).
-# Horizontaler Abstand zur nächsten Pipe.
-# Reward-Funktion angepasst:
-
-# Bestrafung bei Abweichung von der Pipe-Mitte.
-# Belohnung für das Passieren von Pipes.

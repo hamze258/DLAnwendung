@@ -7,7 +7,7 @@ from stable_baselines3.common.env_checker import check_env
 from stable_baselines3.common.vec_env import DummyVecEnv
 from stable_baselines3.common.callbacks import EvalCallback, CheckpointCallback, BaseCallback
 
-from vector_env.agents.flappy_vector_env import FlappyBirdEnv
+from vector_env.agents.reward3.flappy_vector_env import FlappyBirdEnv
 # from stable_baselines3.common.vec_env import VecTransposeImage  # Falls gebraucht für Bildobservations
 
 class DetailedMetricsCallback(BaseCallback):
@@ -213,8 +213,8 @@ if __name__ == "__main__":
     # Callbacks
     eval_callback = EvalCallback(
         eval_env=eval_env,
-        best_model_save_path="vector_env/models/DQN/training5",
-        log_path="vector_env/logs/DQN/training5",
+        best_model_save_path="vector_env/models/DQN/training8",
+        log_path="vector_env/logs/DQN/training8",
         eval_freq=10000,
         n_eval_episodes=10,
         deterministic=True,
@@ -225,7 +225,7 @@ if __name__ == "__main__":
 
     checkpoint_callback = CheckpointCallback(
         save_freq=50000,
-        save_path="vector_env/models/checkpoints/DQN/training5",
+        save_path="vector_env/models/checkpoints/DQN/training8",
         name_prefix="DQN_Flappy_Bird"
     )
 
@@ -237,15 +237,15 @@ if __name__ == "__main__":
         policy="MlpPolicy",
         env=vec_env,
         verbose=1,
-        learning_rate=5e-4,
-        buffer_size=100000,
-        learning_starts=10000,
-        batch_size=128,
-        tau=1.0,
+        learning_rate=1e-3,  # Erhöhtes Learning Rate
+        buffer_size=200000,  # Erhöhter Buffer
+        learning_starts=50000,  # Erhöhte Startzeit
+        batch_size=64,  # Kleinere Batch-Größe
+        tau=0.005,  # Weiches Update
         gamma=0.99,
         train_freq=(1, "step"),
         gradient_steps=1,
-        target_update_interval=5000,
+        target_update_interval=10000,  # Erhöhtes Update-Intervall
         exploration_fraction=0.2,
         exploration_final_eps=0.02,
         tensorboard_log="tensorboard/DQN",

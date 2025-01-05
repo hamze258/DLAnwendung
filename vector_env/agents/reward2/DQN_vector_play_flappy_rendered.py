@@ -14,7 +14,7 @@ video_dir = r"vector_env\videos"
 os.makedirs(video_dir, exist_ok=True)
 
 
-model = DQN.load(r"vector_env\models\DQN\training1\DQN.zip")
+model = DQN.load(r"vector_env\models\DQN\training7\best_model.zip")
 
 
 # Name des Videos
@@ -27,10 +27,10 @@ env = DummyVecEnv([lambda: FlappyBirdEnv(render_mode="rgb_array")])
 
 
 # Anzahl der Episoden, die Sie aufzeichnen möchten
-num_episodes = 2  # Ändern Sie dies auf die gewünschte Anzahl
+num_episodes = 15  # Ändern Sie dies auf die gewünschte Anzahl
 
 # Video Writer mit imageio
-fps = 30  # Frames pro Sekunde
+fps = 60  # Frames pro Sekunde
 
 with imageio.get_writer(video_path, fps=fps) as video:
     for episode in range(num_episodes):
@@ -47,7 +47,7 @@ with imageio.get_writer(video_path, fps=fps) as video:
 
             # Aktion ausführen
             obs, reward, done, info = env.step(action)
-            time.sleep(0.05)  # Optional: für eine flüssigere Darstellung
+            print(info)
 
 
 
