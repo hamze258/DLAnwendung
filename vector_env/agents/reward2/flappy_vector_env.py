@@ -6,6 +6,7 @@ import pygame
 from vector_env.src.entities import Background, Floor, Pipes, Player, Score
 from vector_env.src.utils import GameConfig, Window, Images, Sounds
 
+
 class FlappyBirdEnv(gym.Env):
     metadata = {"render_modes": ["human", "rgb_array"]}
 
@@ -13,7 +14,7 @@ class FlappyBirdEnv(gym.Env):
         super(FlappyBirdEnv, self).__init__()
 
         self.render_mode = render_mode
-
+        
         if render_mode == "human":
             pygame.init()
             pygame.display.set_caption("Flappy Bird")
@@ -62,8 +63,10 @@ class FlappyBirdEnv(gym.Env):
 
     def step(self, action):
 
-        if action == 1:
-            self.player.flap()
+        observation = self._get_observation()
+
+        if self.render_mode in ["human", "rgb_array"]:
+            self.render()
 
         self.background.tick()
         self.score.tick()
@@ -73,15 +76,19 @@ class FlappyBirdEnv(gym.Env):
 
         reward = 0
 
+        if action == 1:
+            self.player.flap()
+
+
         if self.player.collided(self.pipes, self.floor):
             self.gameover = True
             reward = -1
 
         # Reward for passing pipes
-        for pipe in self.pipes.upper:
+        for pipe in self.pipes.lower:
             if not pipe.scored and pipe.cx < self.player.cx:
                 self.score.add()
-                reward += 1.0
+                reward += 10.0
                 pipe.scored = True
 
         # Belohnung oder Strafe basierend auf der relativen Höhe zur nächsten Pipe
@@ -92,35 +99,18 @@ class FlappyBirdEnv(gym.Env):
             relative_height = bird_y - pipe_mid
 
             # Belohnung für Nähe zur Mitte der Pipe-Gap
-            reward += 1 - abs(relative_height)  # Je näher an der Mitte, desto besser
-
-            # Strafe für zu hohe oder zu niedrige Position
-            if bird_y > pipe_mid + 0.2:
-                reward -= 1.0  # Zu hoch
-            elif bird_y < pipe_mid - 0.2:
-                reward -= 1.0  # Zu niedrig
-
-            # Bestrafe unnötiges Fliegen
-            if action == 1 and bird_y > 0.8:
-                reward -= 0.5
+            reward += (1 - abs(relative_height))
         else:
-            # Strafe basierend auf vertikaler Geschwindigkeit, wenn keine Pipe sichtbar ist
+            # Hier belohnen wir den Vogel dafür, dass er eine geringe vertikale Geschwindigkeit hat
             target_velocity = 0.0
-            velocity_penalty_factor = 0.1
+            velocity_penalty_factor = 0.5
             velocity_penalty = abs(self.player.vel_y - target_velocity) * velocity_penalty_factor
             reward -= velocity_penalty
 
-        # Clipping der Belohnung
-        reward = np.clip(reward, -1.0, 1.0)
-
-        observation = self._get_observation()
         done = self.gameover
         info = {"score": self.score.score}
 
         self.step_count += 1
-
-        if self.render_mode in ["human", "rgb_array"]:
-            self.render()
 
         return observation, reward, done, False, info
 
@@ -138,16 +128,20 @@ class FlappyBirdEnv(gym.Env):
             pipe_mid = (next_pipe_top_y + next_pipe_bottom_y) / 2.0
             relative_height = bird_y - pipe_mid
 
+            # Berechnung der Pipe-Breite, normalisiert
             pipe_width = upper_pipe.w / self.config.window.width
+
+            # Berechnung der Pipe-Lückengröße, normalisiert
             pipe_gap_size = (lower_pipe.y - upper_pipe.bottom_y) / self.config.window.viewport_height
         else:
             next_pipe_x = 2.0
-            next_pipe_top_y = 0.5
+            next_pipe_top_y = 0.2
             next_pipe_bottom_y = 0.5
             relative_height = 0.0
             pipe_width = 0.0
-            pipe_gap_size = 0.0
+            pipe_gap_size = 0.3
 
+        # Clipping der Werte
         bird_y = np.clip(bird_y, 0.0, 1.0)
         bird_velocity = np.clip(bird_velocity, -10.0, 10.0)
         next_pipe_x = np.clip(next_pipe_x, 0.0, 2.0)
@@ -170,6 +164,7 @@ class FlappyBirdEnv(gym.Env):
 
         return observation
 
+
     def _get_next_pipe(self):
         next_pipe = None
         min_distance = float('inf')
@@ -191,10 +186,14 @@ class FlappyBirdEnv(gym.Env):
                     self.close()
 
             if self.window:
+                # Hintergrund löschen
                 self.config.screen.fill((0, 0, 0))
+                
+                # Zeichne Hintergrund, Pipes, Boden und Spieler
                 self.background.draw()
                 self.pipes.draw()
 
+                # Zeichne Rechtecke für die Lücken der Pipes
                 next_pipe = self._get_next_pipe()
                 if next_pipe:
                     upper_pipe, lower_pipe = next_pipe
@@ -205,26 +204,27 @@ class FlappyBirdEnv(gym.Env):
 
                     pygame.draw.rect(
                         self.config.screen,
-                        (0, 255, 0),
+                        (0, 255, 0),  # Grüne Farbe
                         pygame.Rect(
                             pipe_x,
                             pipe_gap_top,
                             pipe_width,
                             pipe_gap_bottom - pipe_gap_top,
                         ),
-                        2,
+                        2,  # Linienbreite
                     )
-
+                
+                # **Kollisionsbereiche zur Debugging-Zwecken zeichnen**
                 pygame.draw.rect(
                     self.config.screen,
-                    (255, 0, 0),
+                    (255, 0, 0),  # Rote Farbe für Kollisionsbereiche
                     pygame.Rect(
                         self.player.x, 
                         self.player.y, 
                         self.player.w, 
                         self.player.h
                     ),
-                    2,
+                    2,  # Linienbreite
                 )
                 for upper_pipe, lower_pipe in zip(self.pipes.upper, self.pipes.lower):
                     pygame.draw.rect(
@@ -250,24 +250,28 @@ class FlappyBirdEnv(gym.Env):
                         2,
                     )
 
+                # **Beobachtungswerte anzeigen**
                 font = pygame.font.SysFont(None, 24)
                 observation = self._get_observation()
                 obs_text = f"Obs: {observation}"
                 text_surface = font.render(obs_text, True, (255, 255, 255))
                 self.config.screen.blit(text_surface, (10, 10))
 
+                # Zeichne Boden, Spieler und Punkte
                 self.floor.draw()
                 self.player.draw()
                 self.score.draw()
 
+                # Update des Displays
                 pygame.display.update()
                 self.config.clock.tick(self.config.fps)
-
+        
         elif mode == "rgb_array":
             self.config.screen.fill((0, 0, 0))
             self.background.draw()
             self.pipes.draw()
 
+            # Zeichne Rechtecke für die Lücken der Pipes
             next_pipe = self._get_next_pipe()
             if next_pipe:
                 upper_pipe, lower_pipe = next_pipe
@@ -278,14 +282,14 @@ class FlappyBirdEnv(gym.Env):
 
                 pygame.draw.rect(
                     self.config.screen,
-                    (0, 255, 0),
+                    (0, 255, 0),  # Grüne Farbe
                     pygame.Rect(
                         pipe_x,
                         pipe_gap_top,
                         pipe_width,
                         pipe_gap_bottom - pipe_gap_top,
                     ),
-                    2,
+                    2,  # Linienbreite
                 )
             self.floor.draw()
             self.player.draw()
@@ -317,3 +321,12 @@ def create_headless_config():
         images=images,
         sounds=sounds,
     )
+
+# Observation Space erweitert:
+
+# Relativer Abstand zur Mitte der Pipe (relative_height).
+# Horizontaler Abstand zur nächsten Pipe.
+# Reward-Funktion angepasst:
+
+# Bestrafung bei Abweichung von der Pipe-Mitte.
+# Belohnung für das Passieren von Pipes.

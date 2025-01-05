@@ -18,11 +18,15 @@ class Pipe(Entity):
         return self.y + self.h  # Unterkante der Pipe
         
 
+    def tick(self) -> None:
+        """Aktualisiert die Position der Pipe."""
+        self.x += self.vel_x  # Bewegung hier handhaben
+        self.draw()
+
     def draw(self) -> None:
-        self.x += self.vel_x
-        super().draw()
+        """Zeichnet die Pipe auf den Bildschirm."""
         if self.image:
-            self.config.screen.blit(self.image, (self.x, self.y))  # Zeichne die Pipe
+            self.config.screen.blit(self.image, (self.x, self.y))
 
 
 class Pipes(Entity):
