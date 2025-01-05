@@ -212,8 +212,8 @@ if __name__ == "__main__":
     # Callbacks
     eval_callback = EvalCallback(
         eval_env=eval_env,
-        best_model_save_path="vector_env/models/DQN/training5",
-        log_path="vector_env/logs/DQN/training5",
+        best_model_save_path="vector_env/models/DQN/training7",
+        log_path="vector_env/logs/DQN/training7",
         eval_freq=10000,
         n_eval_episodes=10,
         deterministic=True,
@@ -224,14 +224,13 @@ if __name__ == "__main__":
 
     checkpoint_callback = CheckpointCallback(
         save_freq=50000,
-        save_path="vector_env/models/checkpoints/DQN/training5",
+        save_path="vector_env/models/checkpoints/DQN/training7",
         name_prefix="DQN_Flappy_Bird"
     )
 
     # GPU oder CPU?
-    device = "cuda" if torch.cuda.is_available() else "cpu"
-    if torch.cuda.device_count() > 1:
-        device = "cuda:1"
+    device = "cpu"
+
 
     # DQN-Modell
     model = DQN(
