@@ -17,3 +17,4 @@ stable-baselines3[extra]
 imageio
 imageio[pyav]
 plotly
+kaleido
