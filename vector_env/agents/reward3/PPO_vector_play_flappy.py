@@ -1,15 +1,15 @@
 #DQN_vector_plays_flappy.py
 from stable_baselines3.common.vec_env import DummyVecEnv
 from stable_baselines3 import PPO
-from vector_env.agents.flappy_vector_env import FlappyBirdEnv
+from vector_env.agents.reward3.flappy_vector_env import FlappyBirdEnv
 import time
 import keyboard
 
 # Wrappen im VecEnv
-env = DummyVecEnv([lambda: FlappyBirdEnv(render_mode="rgb_array")])
+env = DummyVecEnv([lambda: FlappyBirdEnv(render_mode="human")])
 
 # Gelerntes Modell laden
-model = PPO.load(r"vector_env\models\PPO\training1\best_model.zip")
+model = PPO.load(r"vector_env\models\PPO\training16\best_model.zip")
 
 try:
     for i in range(100):  # Äußere Schleife für kontinuierliches Spielen
@@ -19,7 +19,7 @@ try:
             action, _ = model.predict(obs, deterministic=True)
             obs, reward, done, info = env.step(action)
             #time.sleep(0.02)
-            env.render()
+            #env.render()
 
             if keyboard.is_pressed('q'):  # Prüfen, ob 'q' gedrückt wurde
                 print("Spiel manuell beendet.")

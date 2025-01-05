@@ -65,8 +65,8 @@ class FlappyBirdEnv(gym.Env):
 
         observation = self._get_observation()
 
-        if self.render_mode in ["human", "rgb_array"]:
-            self.render()
+        # if self.render_mode in ["human", "rgb_array"]:
+        #     self.render()
 
         self.background.tick()
         self.score.tick()
