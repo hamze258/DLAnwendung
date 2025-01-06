@@ -115,7 +115,7 @@ if __name__ == "__main__":
     # ------------------------------------------------------------
     # 0) Sicherstellen, dass das Verzeichnis existiert
     # ------------------------------------------------------------
-    save_dir = os.path.join("vector_env", "evaluation", "reward2", "metriken1")
+    save_dir = os.path.join("vector_env", "evaluation", "reward2", "metriken2")
     os.makedirs(save_dir, exist_ok=True)
 
     # 1) Environment erstellen (ggf. mit render=False)
