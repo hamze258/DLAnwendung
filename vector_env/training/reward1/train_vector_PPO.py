@@ -21,7 +21,7 @@ class DetailedMetricsCallback(BaseCallback):
       - Episodenlänge
       - Aktionsverteilung (falls actions in self.locals enthalten)
       - Zeit pro Episode
-      - (Optional) Loss, falls manuell in self.locals["loss"] verfügbar
+      - Loss, falls manuell in self.locals["loss"] verfügbar
     """
     def __init__(self, verbose=0):
         super(DetailedMetricsCallback, self).__init__(verbose)
@@ -84,10 +84,10 @@ class DetailedMetricsCallback(BaseCallback):
                 loss_val = [loss_val]
             self.episode_losses.extend(loss_val)
 
-        # 6) Episodenlänge hochzählen
+        # Episodenlänge hochzählen
         self.current_episode_length += 1
 
-        # 7) Check, ob Episode zu Ende
+        # Check, ob Episode zu Ende
         if "dones" in self.locals:
             dones = self.locals["dones"]
             if any(dones):
@@ -100,10 +100,10 @@ class DetailedMetricsCallback(BaseCallback):
         Sobald eine Episode endet, loggen wir die gesammelten Metriken
         und leeren die Listen für die nächste Episode.
         """
-        # 1) Episodenlänge
+        # Episodenlänge
         self.episode_lengths.append(self.current_episode_length)
 
-        # 2) Zeit pro Episode
+        # Zeit pro Episode
         episode_end_time = time.time()
         episode_duration = episode_end_time - self.episode_start_time
         self.episode_durations.append(episode_duration)
@@ -199,7 +199,7 @@ if __name__ == "__main__":
         print("Aktuelles Gerät:", torch.cuda.current_device())
         print("Gerätename:", torch.cuda.get_device_name(torch.cuda.current_device()))
 
-    # 1. Umgebung initialisieren und überprüfen
+    # Umgebung initialisieren und überprüfen
     env = FlappyBirdEnv(render_mode="rgb_array")
     check_env(env, warn=True)
 
@@ -226,7 +226,6 @@ if __name__ == "__main__":
         name_prefix="PPO_Flappy_Bird"
     )
 
-    # GPU oder CPU?
     device = "cuda" if torch.cuda.is_available() else "cpu"
 
     # PPO-Modell

@@ -8,7 +8,6 @@ from stable_baselines3.common.vec_env import DummyVecEnv
 from stable_baselines3.common.callbacks import EvalCallback, CheckpointCallback, BaseCallback
 
 from vector_env.agents.reward1.flappy_vector_env import FlappyBirdEnv
-# from stable_baselines3.common.vec_env import VecTransposeImage  # Falls gebraucht für Bildobservations
 
 
 class DetailedMetricsCallback(BaseCallback):
@@ -23,7 +22,7 @@ class DetailedMetricsCallback(BaseCallback):
       - Episodenlänge
       - Aktionsverteilung (falls actions in self.locals enthalten)
       - Zeit pro Episode
-      - (Optional) Loss, falls manuell in self.locals["loss"] verfügbar
+      - Loss, falls manuell in self.locals["loss"] verfügbar
     """
     def __init__(self, verbose=0):
         super(DetailedMetricsCallback, self).__init__(verbose)
@@ -31,8 +30,8 @@ class DetailedMetricsCallback(BaseCallback):
         self.episode_rewards = []
         self.episode_td_errors = []
         self.episode_q_values = []
-        self.episode_actions = []   # neu: für die Aktionsverteilung
-        self.episode_losses = []    # optional: wenn du Loss-Informationen speicherst
+        self.episode_actions = []
+        self.episode_losses = []
 
         # Für Episodenlänge und Zeitmessung
         self.current_episode_length = 0
@@ -52,31 +51,31 @@ class DetailedMetricsCallback(BaseCallback):
         Wird nach jedem Umgebungs-Schritt aufgerufen.
         Hier sammeln wir Step-bezogene Daten. Sobald 'done=True', loggen wir die Episode.
         """
-        # 1) Rewards
+        # Rewards
         if "rewards" in self.locals:
             rewards = self.locals["rewards"]
             self.episode_rewards.extend(rewards)
 
-        # 2) TD-Error (nur wenn du es manuell in self.locals speicherst)
+        # TD-Error (nur wenn du es manuell in self.locals speicherst)
         if "td_error" in self.locals:
             td_error = self.locals["td_error"].detach().cpu().numpy()
             if td_error.ndim == 0:
                 td_error = [td_error]
             self.episode_td_errors.extend(td_error)
 
-        # 3) Q-Values (nur wenn du sie manuell in self.locals speicherst)
+        # Q-Values (nur wenn du sie manuell in self.locals speicherst)
         if "q_values" in self.locals:
             q_values = self.locals["q_values"].detach().cpu().numpy()
             if q_values.ndim == 0:
                 q_values = [q_values]
             self.episode_q_values.extend(q_values)
 
-        # 4) Actions (zur Analyse der Verteilung)
+        # Actions (zur Analyse der Verteilung)
         if "actions" in self.locals:
             actions = self.locals["actions"]
             self.episode_actions.extend(actions)
 
-        # 5) (Optional) Loss
+        # Loss
         if "loss" in self.locals:
             loss_val = self.locals["loss"]
             # Falls es ein Tensor ist, in numpy konvertieren
@@ -87,10 +86,10 @@ class DetailedMetricsCallback(BaseCallback):
                 loss_val = [loss_val]
             self.episode_losses.extend(loss_val)
 
-        # 6) Episodenlänge hochzählen
+        # Episodenlänge hochzählen
         self.current_episode_length += 1
 
-        # 7) Check, ob Episode zu Ende
+        # Check, ob Episode zu Ende
         if "dones" in self.locals:
             dones = self.locals["dones"]
             if any(dones):
@@ -103,10 +102,10 @@ class DetailedMetricsCallback(BaseCallback):
         Sobald eine Episode endet, loggen wir die gesammelten Metriken
         und leeren die Listen für die nächste Episode.
         """
-        # 1) Episodenlänge
+        # Episodenlänge
         self.episode_lengths.append(self.current_episode_length)
 
-        # 2) Zeit pro Episode
+        # Zeit pro Episode
         episode_end_time = time.time()
         episode_duration = episode_end_time - self.episode_start_time
         self.episode_durations.append(episode_duration)
@@ -171,7 +170,7 @@ class DetailedMetricsCallback(BaseCallback):
             current_learning_rate = self.model.lr_schedule(self.num_timesteps)
             self.logger.record("metrics/learning_rate", current_learning_rate)
 
-        # --- (Optional) Loss ---
+        # --- Loss ---
         if len(self.episode_losses) > 0:
             loss_array = np.array(self.episode_losses)
             self.logger.record("metrics/loss_mean", np.mean(loss_array))
@@ -202,7 +201,7 @@ if __name__ == "__main__":
         print("Aktuelles Gerät:", torch.cuda.current_device())
         print("Gerätename:", torch.cuda.get_device_name(torch.cuda.current_device()))
 
-    # 1. Umgebung initialisieren und überprüfen
+    # Umgebung initialisieren und überprüfen
     env = FlappyBirdEnv(render_mode="rgb_array")
     check_env(env, warn=True)
 
@@ -229,7 +228,6 @@ if __name__ == "__main__":
         name_prefix="PPO_Flappy_Bird"
     )
 
-    # GPU oder CPU?
     device = "cpu"
 
     # PPO-Modell

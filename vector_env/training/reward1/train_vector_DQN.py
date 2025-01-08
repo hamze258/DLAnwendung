@@ -21,7 +21,7 @@ class DetailedMetricsCallback(BaseCallback):
       - Episodenlänge
       - Aktionsverteilung (falls actions in self.locals enthalten)
       - Zeit pro Episode
-      - (Optional) Loss, falls manuell in self.locals["loss"] verfügbar
+      - Loss, falls manuell in self.locals["loss"] verfügbar
     """
     def __init__(self, verbose=0):
         super(DetailedMetricsCallback, self).__init__(verbose)
@@ -225,7 +225,6 @@ if __name__ == "__main__":
         name_prefix="DQN_Flappy_Bird"
     )
 
-    # GPU oder CPU?
     device = "cuda" if torch.cuda.is_available() else "cpu"
 
     # DQN-Modell
