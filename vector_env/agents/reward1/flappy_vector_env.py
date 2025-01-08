@@ -2,6 +2,7 @@ import gymnasium as gym
 from gymnasium import spaces
 import numpy as np
 import pygame
+import os
 
 from vector_env.src.entities import Background, Floor, Pipes, Player, Score
 from  vector_env.src.utils import GameConfig, Window, Images, Sounds
@@ -10,7 +11,7 @@ from  vector_env.src.utils import GameConfig, Window, Images, Sounds
 class FlappyBirdEnv(gym.Env):
     """
     Gym Environment für Flappy Bird basierend auf der bestehenden Struktur.
-    Nutzt src.entities und src.utils, inklusive der Pipes-Logik aus dem Repository.
+    Nutzt src.entities und src.utils für die Spiellogik.
     """
     metadata = {"render_modes": ["human", "rgb_array"]}
 
@@ -41,11 +42,11 @@ class FlappyBirdEnv(gym.Env):
         self.action_space = spaces.Discrete(2)  # 0 = do nothing, 1 = flap
         self.observation_space = spaces.Box(
             low=np.array([0, -10, 0, 0, 0], dtype=np.float32),
-            high=np.array([1, 10, 2, 2, 2], dtype=np.float32),  # Increased upper bounds
+            high=np.array([1, 10, 2, 2, 2], dtype=np.float32),
             dtype=np.float32
         )
 
-        # Spiel-Objekte
+        # Spielobjekte
         self.background = Background(self.config)
         self.floor = Floor(self.config)
         self.pipes = Pipes(self.config)
@@ -57,7 +58,7 @@ class FlappyBirdEnv(gym.Env):
         self.gameover = False
 
     def reset(self, seed=None, options=None):
-        """Starte eine neue Episode."""
+        """Starte eine neue Episode"""
         super().reset(seed=seed)
 
         # Initialisiere die Objekte neu
@@ -73,7 +74,7 @@ class FlappyBirdEnv(gym.Env):
         return self._get_observation(), {}
 
     def step(self, action):
-        """Einen Schritt im Spiel ausführen."""
+        """Einen Schritt im Spiel ausführen"""
         if action == 1:
             self.player.flap()
 
@@ -95,7 +96,7 @@ class FlappyBirdEnv(gym.Env):
             if not pipe.scored and pipe.cx < self.player.cx:
                 self.score.add()
                 reward += 1.0  # Belohnung für das Passieren einer Pipe
-                pipe.scored = True  # Markiere die Pipe als gezählt
+                pipe.scored = True
 
         # Beobachtung erstellen
         observation = self._get_observation()
@@ -103,6 +104,8 @@ class FlappyBirdEnv(gym.Env):
         # Episode beenden, wenn Spiel vorbei ist
         done = self.gameover
         info = {"score": self.score.score}
+        
+        # Debugging
         # if self.gameover:
         #     print(f"Total Reward for Episode: {self.score.score}")
 
@@ -112,13 +115,6 @@ class FlappyBirdEnv(gym.Env):
         if self.render_mode in ["human", "rgb_array"]:
             self.render()
         
-        #print(f"Player Position: ({self.player.x}, {self.player.y})")
-        #print(f"Number of Pipes: Upper - {len(self.pipes.upper)}, Lower - {len(self.pipes.lower)}")
-        # if len(self.pipes.upper) > 0:
-        #     print(f"First Pipe Position: Upper ({self.pipes.upper[0].x}, {self.pipes.upper[0].y}), "
-        #         f"Lower ({self.pipes.lower[0].x}, {self.pipes.lower[0].y})")
-
-        
         return observation, reward, done, False, info
 
 
@@ -127,7 +123,7 @@ class FlappyBirdEnv(gym.Env):
         bird_y = self.player.y / self.config.window.viewport_height
         bird_velocity = self.player.vel_y / 10
 
-        # Find the next pipe
+        # Nähe des nächsten Rohrs
         next_pipe = None
         min_distance = float('inf')
 
@@ -147,7 +143,7 @@ class FlappyBirdEnv(gym.Env):
             next_pipe_top_y = 1.0 
             next_pipe_bottom_y = 1.0 
 
-        # **Ensure all observation values are within bounds**
+        # observation clipping
         bird_y = np.clip(bird_y, 0.0, 1.0)
         bird_velocity = np.clip(bird_velocity, -10.0, 10.0)
         next_pipe_x = np.clip(next_pipe_x, 0.0, 2.0)
@@ -159,7 +155,7 @@ class FlappyBirdEnv(gym.Env):
         return observation
 
     def render(self):
-        """Das Spiel rendern basierend auf dem angegebenen Modus."""
+        """Das Spiel rendern basierend auf dem angegebenen Modus"""
         mode = self.render_mode
 
         if mode == "human":
@@ -170,7 +166,7 @@ class FlappyBirdEnv(gym.Env):
 
         # Zeichne die Objekte
         if mode == "human" and self.window:
-            self.config.screen.fill((0, 0, 0))  # Bildschirm leeren
+            self.config.screen.fill((0, 0, 0))
             self.background.draw()
             self.pipes.draw()
             self.floor.draw()
@@ -194,14 +190,13 @@ class FlappyBirdEnv(gym.Env):
             return None
 
     def close(self):
-        """Schließt Ressourcen."""
+        """Schließt Ressourcen"""
         pygame.quit()
 
 def create_headless_config():
     """
     Erstellt eine GameConfig für den headless-Modus (ohne grafische Darstellung).
     """
-    import os
     os.environ["SDL_VIDEODRIVER"] = "dummy"  # Dummy-Videotreiber für Headless-Betrieb
     pygame.init()
     

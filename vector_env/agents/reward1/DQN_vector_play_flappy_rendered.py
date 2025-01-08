@@ -1,6 +1,4 @@
-
 import os
-import time
 import imageio
 
 #DQN_vector_plays_flappy.py
@@ -10,7 +8,7 @@ from vector_env.agents.reward1.flappy_vector_env import FlappyBirdEnv
 import time
 
 # Videoausgabeordner erstellen
-video_dir = r"vector_env\videos"
+video_dir = r"vector_env\videos\reward1"
 os.makedirs(video_dir, exist_ok=True)
 
 
@@ -21,20 +19,15 @@ model = DQN.load(r"vector_env\models\DQN\training6\best_model.zip")
 video_path = os.path.join(video_dir, "DQN1.mp4")
 
 # Umgebung erstellen mit "rgb_array" Render-Modus
-#env = FlappyBirdEnv(render_mode="rgb_array")
-
 env = DummyVecEnv([lambda: FlappyBirdEnv(render_mode="rgb_array")])
 
+# Anzahl der Episoden
+num_episodes = 15 
 
-# Anzahl der Episoden, die Sie aufzeichnen möchten
-num_episodes = 15  # Ändern Sie dies auf die gewünschte Anzahl
-
-# Video Writer mit imageio
 fps = 30  # Frames pro Sekunde
 
 with imageio.get_writer(video_path, fps=fps) as video:
     for episode in range(num_episodes):
-        #try:
         obs = env.reset()
         done = False
 
@@ -47,10 +40,6 @@ with imageio.get_writer(video_path, fps=fps) as video:
 
             # Aktion ausführen
             obs, reward, done, info = env.step(action)
-            #time.sleep(0.05)  # Optional: für eine flüssigere Darstellung
-
-
-
 env.close()
 
 print(f"Video wurde in {video_path} gespeichert.")

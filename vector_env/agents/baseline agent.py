@@ -1,4 +1,3 @@
-
 from vector_env.agents.reward1.flappy_vector_env import FlappyBirdEnv
 import os
 import time
@@ -9,15 +8,13 @@ video_dir = "./videos"
 os.makedirs(video_dir, exist_ok=True)
 
 # Name des Videos
-video_path = os.path.join(video_dir, "kein_baseline_mehr.mp4")
+video_path = os.path.join(video_dir, "baseline.mp4")
 
 # Umgebung erstellen mit "rgb_array" Render-Modus
 env = FlappyBirdEnv(render_mode="rgb_array")
 
-# Anzahl der Episoden, die Sie aufzeichnen möchten
-num_episodes = 2  # Ändern Sie dies auf die gewünschte Anzahl
+num_episodes = 2
 
-# Video Writer mit imageio
 fps = 30  # Frames pro Sekunde
 with imageio.get_writer(video_path, fps=fps) as video:
     for episode in range(num_episodes):
@@ -36,7 +33,7 @@ with imageio.get_writer(video_path, fps=fps) as video:
                 next_pipe_top_y = obs[3]
                 next_pipe_bottom_y = obs[4]
 
-                # Einfache Regel: Flappen, wenn der Vogel unter dem oberen Rohr ist
+                # Einfache Regel: Flappen, wenn der Vogel unter dem nächsten Rohr ist
                 if bird_y < next_pipe_top_y:
                     action = 1  # Flappen
                 else:
@@ -44,7 +41,7 @@ with imageio.get_writer(video_path, fps=fps) as video:
 
                 # Aktion ausführen
                 obs, reward, done, _, info = env.step(action)
-                time.sleep(0.05)  # Optional: für eine flüssigere Darstellung
+                time.sleep(0.05)
 
         except Exception as e:
             print(f"Ein Fehler ist aufgetreten: {e}")

@@ -1,4 +1,3 @@
-#DQN_vector_plays_flappy.py
 from stable_baselines3.common.vec_env import DummyVecEnv
 from stable_baselines3 import DQN
 from vector_env.agents.reward3.flappy_vector_env import FlappyBirdEnv
@@ -17,11 +16,9 @@ try:
         while not done:
             action, _ = model.predict(obs, deterministic=True)
             obs, reward, done, info = env.step(action)
-            #time.sleep(0.02)
-            #env.render()
-            print(info)
 
-            if keyboard.is_pressed('q'):  # Prüfen, ob 'q' gedrückt wurde
+            print(info)
+            if keyboard.is_pressed('q'):
                 print("Spiel manuell beendet.")
                 raise KeyboardInterrupt
 

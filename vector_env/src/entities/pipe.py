@@ -9,7 +9,7 @@ class Pipe(Entity):
     def __init__(self, *args, **kwargs) -> None:
         super().__init__(*args, **kwargs)
         self.vel_x = -5
-        self.scored = False  # Neue Eigenschaft
+        self.scored = False
         self.h = self.image.get_height() if self.image else 0  # Höhe der Pipe
     
     @property

@@ -5,7 +5,7 @@ from stable_baselines3 import PPO
 from vector_env.agents.reward1.flappy_vector_env import FlappyBirdEnv
 
 # Videoausgabeordner erstellen
-video_dir = r"vector_env\videos"
+video_dir = r"vector_env\videos\reward1"
 os.makedirs(video_dir, exist_ok=True)
 
 # Modell laden
@@ -25,7 +25,7 @@ fps = 30
 with imageio.get_writer(video_path, fps=fps) as video:
     for episode in range(num_episodes):
         obs = env.reset()
-        done = [False]  # DummyVecEnv gibt Listen zurück
+        done = [False]
         
         while not done[0]:
             # Frame rendern und hinzufügen

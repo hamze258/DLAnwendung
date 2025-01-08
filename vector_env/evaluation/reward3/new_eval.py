@@ -1,7 +1,6 @@
 import numpy as np
 import plotly.express as px
 import plotly.graph_objects as go
-import time
 import os
 import pandas as pd
 
@@ -9,9 +8,6 @@ from stable_baselines3 import DQN, PPO
 from stable_baselines3.common.vec_env import DummyVecEnv
 from vector_env.agents.reward3.flappy_vector_env import FlappyBirdEnv
 
-# ----------------------------------------------------
-# Funktion zum Auswerten eines Modells
-# ----------------------------------------------------
 def evaluate_model(model, env, n_episodes=100, max_steps=10000):
     scores_all_episodes = []
     rewards_all_episodes = []
@@ -28,8 +24,8 @@ def evaluate_model(model, env, n_episodes=100, max_steps=10000):
             obs, reward, done, info = env.step(action)
             step_counter += 1
             total_reward += reward
-            score = info[0].get('score', 0)  # DummyVecEnv => info ist eine Liste
-            total_score = score  # Update des Scores
+            score = info[0].get('score', 0)
+            total_score = score
 
         scores_all_episodes.append(total_score)
         rewards_all_episodes.append(total_reward)
@@ -39,16 +35,10 @@ def evaluate_model(model, env, n_episodes=100, max_steps=10000):
 
     return scores_all_episodes, rewards_all_episodes
 
-# ----------------------------------------------------
-# Funktion für kumulative Durchschnittswerte
-# ----------------------------------------------------
 def cumulative_average(data):
     cum_sum = np.cumsum(data)
     return cum_sum / np.arange(1, len(data) + 1)
 
-# ----------------------------------------------------
-# Funktion zum Speichern der Metriken als NumPy-Arrays
-# ----------------------------------------------------
 def save_metrics_as_numpy(save_dir, algorithm, scores, mean_scores, rewards, mean_rewards):
     np.savez(
         os.path.join(save_dir, f"evaluation_metrics_{algorithm}.npz"),
@@ -59,9 +49,6 @@ def save_metrics_as_numpy(save_dir, algorithm, scores, mean_scores, rewards, mea
     )
     print(f"Metriken für {algorithm} wurden als NumPy-Arrays in 'evaluation_metrics_{algorithm}.npz' gespeichert.")
 
-# ----------------------------------------------------
-# Funktion zum Laden der gespeicherten NumPy-Arrays (optional)
-# ----------------------------------------------------
 def load_metrics_from_numpy(save_dir, algorithm):
     data = np.load(os.path.join(save_dir, f"evaluation_metrics_{algorithm}.npz"))
     scores = data['scores']
@@ -70,77 +57,45 @@ def load_metrics_from_numpy(save_dir, algorithm):
     mean_rewards = data['mean_rewards']
     return scores, mean_scores, rewards, mean_rewards
 
-# ----------------------------------------------------
-# Hauptteil: Auswahl und Plotting eines Modells
-# ----------------------------------------------------
 if __name__ == "__main__":
-    # ------------------------------------------------------------
-    # Auswahl des zu plottenden Algorithmus
-    # ------------------------------------------------------------
-    selected_algorithm = 'PPO'  # Ändere zu 'PPO', um PPO zu plotten
+
+    selected_algorithm = 'PPO'
 
     # Validierung der Auswahl
     if selected_algorithm not in ['DQN', 'PPO']:
         raise ValueError("selected_algorithm muss entweder 'DQN' oder 'PPO' sein.")
 
-    # ------------------------------------------------------------
-    # Sicherstellen, dass das Verzeichnis existiert
-    # ------------------------------------------------------------
     save_dir = os.path.join("vector_env", "evaluation", "reward3", "PPO")
     os.makedirs(save_dir, exist_ok=True)
 
-    # ------------------------------------------------------------
-    # Environment erstellen (ggf. mit render=False)
-    # ------------------------------------------------------------
     env = DummyVecEnv([lambda: FlappyBirdEnv(render_mode="rgb_array")])
 
-    # ------------------------------------------------------------
-    # Vortrainierte Modelle laden
-    # ------------------------------------------------------------
     if selected_algorithm == 'DQN':
         model = DQN.load(r"vector_env\models\DQN\training8\best_model.zip")
     else:
         model = PPO.load(r"vector_env\models\PPO\training16\best_model.zip")
 
-    # ------------------------------------------------------------
-    # Anzahl der Episoden für den Vergleich
-    # ------------------------------------------------------------
-    num_episodes = 100  # Geändert von 1000 auf 100
-    max_steps_per_episode = 1000  # Maximale Schritte pro Episode
+    num_episodes = 100
+    max_steps_per_episode = 1000
 
-    # ------------------------------------------------------------
-    # Modell auswerten
-    # ------------------------------------------------------------
     scores, rewards = evaluate_model(model, env, num_episodes, max_steps_per_episode)
 
     # Environment schließen (nach Evaluation)
     env.close()
 
-    # ------------------------------------------------------------
-    # Kumulative Durchschnittswerte berechnen
-    # ------------------------------------------------------------
     mean_scores = cumulative_average(scores)
     mean_rewards = cumulative_average(rewards)
 
-    # ------------------------------------------------------------
-    # Score-Statistiken berechnen
-    # ------------------------------------------------------------
     mean_score = np.mean(scores)
     std_score  = np.std(scores)
 
     print(f"[SCORE] {selected_algorithm}: Mean = {mean_score:.2f}, Std = {std_score:.2f}")
 
-    # ------------------------------------------------------------
-    # Reward-Statistiken berechnen
-    # ------------------------------------------------------------
     mean_reward = np.mean(rewards)
     std_reward  = np.std(rewards)
 
     print(f"[REWARD] {selected_algorithm}: Mean = {mean_reward:.2f}, Std = {std_reward:.2f}")
 
-    # ------------------------------------------------------------
-    # Zusätzliche Metriken zur Robustheit
-    # ------------------------------------------------------------
     min_score = np.min(scores)
     max_score = np.max(scores)
     min_reward = np.min(rewards)
@@ -149,18 +104,12 @@ if __name__ == "__main__":
     print(f"{selected_algorithm}: Min Score = {min_score}, Max Score = {max_score}")
     print(f"{selected_algorithm}: Min Reward = {min_reward}, Max Reward = {max_reward}")
 
-    # ------------------------------------------------------------
-    # Speichern der Metriken als NumPy-Arrays
-    # ------------------------------------------------------------
     save_metrics_as_numpy(
         save_dir,
         selected_algorithm,
         scores, mean_scores, rewards, mean_rewards
     )
 
-    # ------------------------------------------------------------
-    # DataFrame für Plotly (Scores und Rewards pro Episode)
-    # ------------------------------------------------------------
     df = pd.DataFrame({
         "Episode": range(1, len(scores) + 1),
         "Score": scores,
@@ -169,14 +118,11 @@ if __name__ == "__main__":
         "Mean Reward": mean_rewards
     })
 
-    # ------------------------------------------------------------
-    # Plot 1: Boxplot (Score-Verteilung)
-    # ------------------------------------------------------------
     fig_box = go.Figure()
     fig_box.add_trace(go.Box(
         y=df["Score"],
         name=selected_algorithm,
-        boxmean='sd'   # zeigt Durchschnitt + SD
+        boxmean='sd'
     ))
     fig_box.update_layout(
         title=f'Boxplot: {selected_algorithm} (Scores)',
@@ -185,9 +131,6 @@ if __name__ == "__main__":
     fig_box.write_image(os.path.join(save_dir, f"boxplot_scores_{selected_algorithm}.png"))
     fig_box.show()
 
-    # ------------------------------------------------------------
-    # Plot 2: Boxplot (Reward-Verteilung)
-    # ------------------------------------------------------------
     fig_box_reward = go.Figure()
     fig_box_reward.add_trace(go.Box(
         y=df["Reward"],
@@ -201,9 +144,6 @@ if __name__ == "__main__":
     fig_box_reward.write_image(os.path.join(save_dir, f"boxplot_rewards_{selected_algorithm}.png"))
     fig_box_reward.show()
 
-    # ------------------------------------------------------------
-    # Plot 3: ECDF (Empirical Cumulative Distribution Function) für Scores
-    # ------------------------------------------------------------
     fig_ecdf = px.ecdf(
         df,
         x="Score",
@@ -216,9 +156,6 @@ if __name__ == "__main__":
     fig_ecdf.write_image(os.path.join(save_dir, f"ecdf_scores_{selected_algorithm}.png"))
     fig_ecdf.show()
 
-    # ------------------------------------------------------------
-    # Plot 4: ECDF für Rewards
-    # ------------------------------------------------------------
     fig_ecdf_reward = px.ecdf(
         df,
         x="Reward",
@@ -231,37 +168,28 @@ if __name__ == "__main__":
     fig_ecdf_reward.write_image(os.path.join(save_dir, f"ecdf_rewards_{selected_algorithm}.png"))
     fig_ecdf_reward.show()
 
-    # ------------------------------------------------------------
-    # Plot 5: Violin-Plot (Scores)
-    # ------------------------------------------------------------
     fig_violin = px.violin(
         df,
         y="Score",
-        box=True,        # zeigt zusätzlich den Boxplot
-        points="all",    # alle Datenpunkte
+        box=True,
+        points="all",
         title=f"Violin Plot der Scores ({selected_algorithm})"
     )
     fig_violin.update_layout(yaxis_title='Score')
     fig_violin.write_image(os.path.join(save_dir, f"violin_scores_{selected_algorithm}.png"))
     fig_violin.show()
 
-    # ------------------------------------------------------------
-    # Plot 6: Violin-Plot (Rewards)
-    # ------------------------------------------------------------
     fig_violin_reward = px.violin(
         df,
         y="Reward",
-        box=True,        # zeigt zusätzlich den Boxplot
-        points="all",    # alle Datenpunkte
+        box=True,
+        points="all",
         title=f"Violin Plot der Rewards ({selected_algorithm})"
     )
     fig_violin_reward.update_layout(yaxis_title='Reward')
     fig_violin_reward.write_image(os.path.join(save_dir, f"violin_rewards_{selected_algorithm}.png"))
     fig_violin_reward.show()
 
-    # ------------------------------------------------------------
-    # Plot 7: Liniendiagramm: Score pro Episode (ungeglättet)
-    # ------------------------------------------------------------
     fig_line_episodes = px.line(
         df,
         x="Episode",
@@ -272,9 +200,6 @@ if __name__ == "__main__":
     fig_line_episodes.write_image(os.path.join(save_dir, f"line_episode_scores_{selected_algorithm}.png"))
     fig_line_episodes.show()
 
-    # ------------------------------------------------------------
-    # Plot 8: Liniendiagramm: Reward pro Episode (ungeglättet)
-    # ------------------------------------------------------------
     fig_line_rewards = px.line(
         df,
         x="Episode",
@@ -285,9 +210,6 @@ if __name__ == "__main__":
     fig_line_rewards.write_image(os.path.join(save_dir, f"line_episode_rewards_{selected_algorithm}.png"))
     fig_line_rewards.show()
 
-    # ------------------------------------------------------------
-    # Plot 9: Liniendiagramm kumulativer Durchschnitt (Scores)
-    # ------------------------------------------------------------
     fig_line_cum = go.Figure()
     fig_line_cum.add_trace(go.Scatter(
         x=list(range(1, len(mean_scores) + 1)),
@@ -303,9 +225,6 @@ if __name__ == "__main__":
     fig_line_cum.write_image(os.path.join(save_dir, f"line_cumulative_avg_scores_{selected_algorithm}.png"))
     fig_line_cum.show()
 
-    # ------------------------------------------------------------
-    # Plot 10: Liniendiagramm kumulativer Durchschnitt (Rewards)
-    # ------------------------------------------------------------
     fig_line_cum_reward = go.Figure()
     fig_line_cum_reward.add_trace(go.Scatter(
         x=list(range(1, len(mean_rewards) + 1)),
@@ -321,9 +240,6 @@ if __name__ == "__main__":
     fig_line_cum_reward.write_image(os.path.join(save_dir, f"line_cumulative_avg_rewards_{selected_algorithm}.png"))
     fig_line_cum_reward.show()
 
-    # ------------------------------------------------------------
-    # Plot 11: Vergleich der minimalen und maximalen Scores
-    # ------------------------------------------------------------
     categories = ["Min Score", "Max Score"]
     values = [min_score, max_score]
 
@@ -339,9 +255,6 @@ if __name__ == "__main__":
     fig_min_max.write_image(os.path.join(save_dir, f"min_max_scores_comparison_{selected_algorithm}.png"))
     fig_min_max.show()
 
-    # ------------------------------------------------------------
-    # Plot 12: Vergleich der minimalen und maximalen Rewards
-    # ------------------------------------------------------------
     categories_reward = ["Min Reward", "Max Reward"]
     values_reward = [min_reward, max_reward]
 
@@ -356,7 +269,5 @@ if __name__ == "__main__":
     )
     fig_min_max_reward.write_image(os.path.join(save_dir, f"min_max_rewards_comparison_{selected_algorithm}.png"))
     fig_min_max_reward.show()
-
-    # Optional: Weitere Plots oder Metriken hinzufügen
 
     print(f"Alle Vergleichsmetriken für {selected_algorithm} wurden geplottet und im Verzeichnis '{save_dir}' gespeichert.")

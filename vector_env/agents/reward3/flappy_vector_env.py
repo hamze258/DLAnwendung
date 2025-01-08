@@ -219,7 +219,7 @@ class FlappyBirdEnv(gym.Env):
                         2,  # Linienbreite
                     )
                 
-                # **Kollisionsbereiche zur Debugging-Zwecken zeichnen**
+                # Kollisionsbereiche zur Debugging-Zwecken zeichnen
                 pygame.draw.rect(
                     self.config.screen,
                     (255, 0, 0),  # Rote Farbe für Kollisionsbereiche
@@ -255,7 +255,7 @@ class FlappyBirdEnv(gym.Env):
                         2,
                     )
 
-                # **Beobachtungswerte anzeigen**
+                # Beobachtungswerte anzeigen
                 font = pygame.font.SysFont(None, 24)
                 observation = self._get_observation()
                 obs_text = f"Obs: {observation}"
@@ -298,7 +298,7 @@ class FlappyBirdEnv(gym.Env):
                     2,  # Linienbreite
                 )
             
-            # **Kollisionsbereiche zur Debugging-Zwecken zeichnen**
+            # Kollisionsbereiche zur Debugging-Zwecken zeichnen
             pygame.draw.rect(
                 self.config.screen,
                 (255, 0, 0),  # Rote Farbe für Kollisionsbereiche
@@ -334,7 +334,7 @@ class FlappyBirdEnv(gym.Env):
                     2,
                 )
 
-            # **Beobachtungswerte anzeigen**
+            # Beobachtungswerte anzeigen
             font = pygame.font.SysFont(None, 24)
             observation = self._get_observation()
             obs_text = f"Obs: {observation}"

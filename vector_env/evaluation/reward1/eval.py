@@ -1,7 +1,6 @@
 import numpy as np
 import plotly.express as px
 import plotly.graph_objects as go
-import time
 import os
 import pandas as pd
 
@@ -9,9 +8,7 @@ from stable_baselines3 import DQN, PPO
 from stable_baselines3.common.vec_env import DummyVecEnv
 from vector_env.agents.reward1.flappy_vector_env import FlappyBirdEnv
 
-# ----------------------------------------------------
-# Funktion zum Auswerten eines Modells
-# ----------------------------------------------------
+
 def evaluate_model(model, env, n_episodes=100, max_steps=10000):
     """
     Führt bis zu n_episodes Episoden im gegebenen (Vec-)Env durch,
@@ -33,32 +30,23 @@ def evaluate_model(model, env, n_episodes=100, max_steps=10000):
         while not done and step_counter < max_steps:
             action, _states = model.predict(obs, deterministic=True)
 
-            # Schritt im Environment
             obs, reward, done, info = env.step(action)
             
-            # Schrittzähler erhöhen
             step_counter += 1
 
-            # Reward summieren
             total_reward += reward
 
-            # Extrahiere den Score aus dem info-Dictionary
-            # Annahme: 'score' ist im info-Dictionary enthalten
-            score = info[0].get('score', 0)  # DummyVecEnv => info ist eine Liste
-            total_score = score  # Update des Scores (falls kumulativ, ändern Sie dies entsprechend
+            score = info[0].get('score', 0)
+            total_score = score
 
         scores_all_episodes.append(total_score)
         rewards_all_episodes.append(total_reward)
         
-        # Optional: Fortschritt anzeigen
         if (ep + 1) % 10 == 0 or (ep + 1) == n_episodes:
             print(f"Episode {ep + 1}/{n_episodes} abgeschlossen. Schritte: {step_counter}")
 
     return scores_all_episodes, rewards_all_episodes
 
-# ----------------------------------------------------
-# Funktion für kumulative Durchschnittswerte
-# ----------------------------------------------------
 def cumulative_average(data):
     """
     Gibt eine Liste zurück, in der der i-te Eintrag
@@ -67,9 +55,7 @@ def cumulative_average(data):
     cum_sum = np.cumsum(data)
     return cum_sum / np.arange(1, len(data) + 1)
 
-# ----------------------------------------------------
-# Funktion zum Speichern der Metriken als NumPy-Arrays
-# ----------------------------------------------------
+
 def save_metrics_as_numpy(save_dir,
                           scores_dqn, mean_scores_dqn, rewards_dqn, mean_rewards_dqn,
                           scores_ppo, mean_scores_ppo, rewards_ppo, mean_rewards_ppo):
@@ -89,9 +75,6 @@ def save_metrics_as_numpy(save_dir,
     )
     print(f"Metriken wurden als NumPy-Arrays in 'evaluation_metrics.npz' gespeichert.")
 
-# ----------------------------------------------------
-# Funktion zum Laden der gespeicherten NumPy-Arrays (optional)
-# ----------------------------------------------------
 def load_metrics_from_numpy(save_dir):
     """
     Lädt die Metriken aus einer .npz-Datei.
@@ -108,51 +91,32 @@ def load_metrics_from_numpy(save_dir):
     return (scores_dqn, mean_scores_dqn, rewards_dqn, mean_rewards_dqn,
             scores_ppo, mean_scores_ppo, rewards_ppo, mean_rewards_ppo)
 
-# ----------------------------------------------------
-# Hauptteil: Vergleich von zwei Modellen
-# ----------------------------------------------------
+
 if __name__ == "__main__":
-    # ------------------------------------------------------------
-    # 0) Sicherstellen, dass das Verzeichnis existiert
-    # ------------------------------------------------------------
+
     save_dir = os.path.join("vector_env", "evaluation", "reward1", "metriken1")
     os.makedirs(save_dir, exist_ok=True)
 
-    # 1) Environment erstellen (ggf. mit render=False)
     env = DummyVecEnv([lambda: FlappyBirdEnv(render_mode="rgb_array")])
 
-    # 2) Zwei vortrainierte Modelle laden
     model_dqn1 = DQN.load(r"vector_env\models\DQN\training6\best_model.zip")
     model_ppo1 = PPO.load(r"vector_env\models\PPO\training4\best_model.zip")
 
-    # model_dqn2 = DQN.load(r"vector_env\models\DQN\training6\best_model.zip")
-    # model_ppo2 = PPO.load(r"vector_env\models\PPO\training4\best_model.zip")
-
-    # model_dqn3 = DQN.load(r"vector_env\models\DQN\training6\best_model.zip")
-    # model_ppo3 = PPO.load(r"vector_env\models\PPO\training4\best_model.zip")
-
-    # Falls Sie ein anderes zweites Modell vergleichen möchten, laden Sie es hier.
-
-    # 3) Anzahl der Episoden für den Vergleich
     num_episodes = 100  # Geändert von 1000 auf 100
     max_steps_per_episode = 1000  # Maximale Schritte pro Episode
 
-    # 4) Modelle auswerten
     scores_dqn, rewards_dqn = evaluate_model(
         model_dqn1, env, num_episodes, max_steps_per_episode)
     scores_ppo, rewards_ppo = evaluate_model(
         model_ppo1, env, num_episodes, max_steps_per_episode)
 
-    # Environment schließen (nach Evaluation)
     env.close()
 
-    # 5) Kumulative Durchschnittswerte berechnen
     mean_scores_dqn = cumulative_average(scores_dqn)
     mean_rewards_dqn = cumulative_average(rewards_dqn)
     mean_scores_ppo = cumulative_average(scores_ppo)
     mean_rewards_ppo = cumulative_average(rewards_ppo)
 
-    # 6) Score-Statistiken berechnen
     mean_dqn = np.mean(scores_dqn)
     std_dqn  = np.std(scores_dqn)
     mean_ppo = np.mean(scores_ppo)
@@ -161,7 +125,6 @@ if __name__ == "__main__":
     print(f"[SCORE] DQN: Mean = {mean_dqn:.2f}, Std = {std_dqn:.2f}")
     print(f"[SCORE] PPO: Mean = {mean_ppo:.2f}, Std = {std_ppo:.2f}")
 
-    # 7) Reward-Statistiken berechnen
     mean_reward_dqn = np.mean(rewards_dqn)
     std_reward_dqn  = np.std(rewards_dqn)
     mean_reward_ppo = np.mean(rewards_ppo)
@@ -170,8 +133,6 @@ if __name__ == "__main__":
     print(f"[REWARD] DQN: Mean = {mean_reward_dqn:.2f}, Std = {std_reward_dqn:.2f}")
     print(f"[REWARD] PPO: Mean = {mean_reward_ppo:.2f}, Std = {std_reward_ppo:.2f}")
 
-    # 8) Zusätzliche Metriken zur Robustheit
-    # Beispiel: Schlechteste und beste Episode
     min_score_dqn = np.min(scores_dqn)
     max_score_dqn = np.max(scores_dqn)
     min_score_ppo = np.min(scores_ppo)
@@ -187,18 +148,12 @@ if __name__ == "__main__":
     print(f"DQN: Min Reward = {min_reward_dqn}, Max Reward = {max_reward_dqn}")
     print(f"PPO: Min Reward = {min_reward_ppo}, Max Reward = {max_reward_ppo}")
 
-    # ------------------------------------------------------------
-    # Speichern der Metriken als NumPy-Arrays
-    # ------------------------------------------------------------
     save_metrics_as_numpy(
         save_dir,
         scores_dqn, mean_scores_dqn, rewards_dqn, mean_rewards_dqn,
         scores_ppo, mean_scores_ppo, rewards_ppo, mean_rewards_ppo
     )
 
-    # ------------------------------------------------------------
-    # DataFrame für Plotly (Scores und Rewards pro Episode, Algorithmus)
-    # ------------------------------------------------------------
     df_dqn = pd.DataFrame({
         "Episode": range(1, len(scores_dqn) + 1),
         "Score": scores_dqn,
@@ -219,14 +174,11 @@ if __name__ == "__main__":
 
     df_scores_rewards = pd.concat([df_dqn, df_ppo], ignore_index=True)
 
-    # ------------------------------------------------------------
-    # Plot 1: Boxplot für beide Algorithmen (Score-Verteilung)
-    # ------------------------------------------------------------
     fig_box = go.Figure()
     fig_box.add_trace(go.Box(
         y=scores_dqn,
         name='DQN',
-        boxmean='sd'   # zeigt Durchschnitt + SD
+        boxmean='sd'
     ))
     fig_box.add_trace(go.Box(
         y=scores_ppo,
@@ -240,9 +192,6 @@ if __name__ == "__main__":
     fig_box.write_image(os.path.join(save_dir, "boxplot_scores.png"))
     fig_box.show()
 
-    # ------------------------------------------------------------
-    # Plot 2: Boxplot für beide Algorithmen (Reward-Verteilung)
-    # ------------------------------------------------------------
     fig_box_reward = go.Figure()
     fig_box_reward.add_trace(go.Box(
         y=rewards_dqn,
@@ -261,9 +210,6 @@ if __name__ == "__main__":
     fig_box_reward.write_image(os.path.join(save_dir, "boxplot_rewards.png"))
     fig_box_reward.show()
 
-    # ------------------------------------------------------------
-    # Plot 3: ECDF (Empirical Cumulative Distribution Function) für Scores
-    # ------------------------------------------------------------
     fig_ecdf = px.ecdf(
         df_scores_rewards,
         x="Score",
@@ -277,9 +223,6 @@ if __name__ == "__main__":
     fig_ecdf.write_image(os.path.join(save_dir, "ecdf_scores.png"))
     fig_ecdf.show()
 
-    # ------------------------------------------------------------
-    # Plot 4: ECDF (Empirical Cumulative Distribution Function) für Rewards
-    # ------------------------------------------------------------
     fig_ecdf_reward = px.ecdf(
         df_scores_rewards,
         x="Reward",
@@ -293,39 +236,31 @@ if __name__ == "__main__":
     fig_ecdf_reward.write_image(os.path.join(save_dir, "ecdf_rewards.png"))
     fig_ecdf_reward.show()
 
-    # ------------------------------------------------------------
-    # Plot 5: Violin-Plot (Scores)
-    # ------------------------------------------------------------
     fig_violin = px.violin(
         df_scores_rewards,
         y="Score",
         color="Algorithm",
-        box=True,        # zeigt zusätzlich den Boxplot
-        points="all",    # alle Datenpunkte
+        box=True,
+        points="all",
         title="Violin Plot der Scores (DQN vs. PPO)"
     )
     fig_violin.update_layout(yaxis_title='Score')
     fig_violin.write_image(os.path.join(save_dir, "violin_scores.png"))
     fig_violin.show()
 
-    # ------------------------------------------------------------
-    # Plot 6: Violin-Plot (Rewards)
-    # ------------------------------------------------------------
+
     fig_violin_reward = px.violin(
         df_scores_rewards,
         y="Reward",
         color="Algorithm",
-        box=True,        # zeigt zusätzlich den Boxplot
-        points="all",    # alle Datenpunkte
+        box=True,
+        points="all", 
         title="Violin Plot der Rewards (DQN vs. PPO)"
     )
     fig_violin_reward.update_layout(yaxis_title='Reward')
     fig_violin_reward.write_image(os.path.join(save_dir, "violin_rewards.png"))
     fig_violin_reward.show()
 
-    # ------------------------------------------------------------
-    # Plot 7: Liniendiagramm: Score pro Episode (ungeglättet)
-    # ------------------------------------------------------------
     fig_line_episodes = px.line(
         df_scores_rewards,
         x="Episode",
@@ -337,9 +272,6 @@ if __name__ == "__main__":
     fig_line_episodes.write_image(os.path.join(save_dir, "line_episode_scores.png"))
     fig_line_episodes.show()
 
-    # ------------------------------------------------------------
-    # Plot 8: Liniendiagramm: Reward pro Episode (ungeglättet)
-    # ------------------------------------------------------------
     fig_line_rewards = px.line(
         df_scores_rewards,
         x="Episode",
@@ -351,9 +283,6 @@ if __name__ == "__main__":
     fig_line_rewards.write_image(os.path.join(save_dir, "line_episode_rewards.png"))
     fig_line_rewards.show()
 
-    # ------------------------------------------------------------
-    # Plot 9: Liniendiagramm kumulativer Durchschnitt (Scores)
-    # ------------------------------------------------------------
     fig_line_cum = go.Figure()
     fig_line_cum.add_trace(go.Scatter(
         x=list(range(1, len(mean_scores_dqn) + 1)),
@@ -375,9 +304,6 @@ if __name__ == "__main__":
     fig_line_cum.write_image(os.path.join(save_dir, "line_cumulative_avg_scores.png"))
     fig_line_cum.show()
 
-    # ------------------------------------------------------------
-    # Plot 10: Liniendiagramm kumulativer Durchschnitt (Rewards)
-    # ------------------------------------------------------------
     fig_line_cum_reward = go.Figure()
     fig_line_cum_reward.add_trace(go.Scatter(
         x=list(range(1, len(mean_rewards_dqn) + 1)),
@@ -399,9 +325,6 @@ if __name__ == "__main__":
     fig_line_cum_reward.write_image(os.path.join(save_dir, "line_cumulative_avg_rewards.png"))
     fig_line_cum_reward.show()
 
-    # ------------------------------------------------------------
-    # Plot 11: Vergleich der minimalen und maximalen Scores
-    # ------------------------------------------------------------
     categories = ["Min Score", "Max Score"]
     dqn_values = [min_score_dqn, max_score_dqn]
     ppo_values = [min_score_ppo, max_score_ppo]
@@ -419,9 +342,6 @@ if __name__ == "__main__":
     fig_min_max.write_image(os.path.join(save_dir, "min_max_scores_comparison.png"))
     fig_min_max.show()
 
-    # ------------------------------------------------------------
-    # Plot 12: Vergleich der minimalen und maximalen Rewards
-    # ------------------------------------------------------------
     categories_reward = ["Min Reward", "Max Reward"]
     dqn_values_reward = [min_reward_dqn, max_reward_dqn]
     ppo_values_reward = [min_reward_ppo, max_reward_ppo]
@@ -434,11 +354,9 @@ if __name__ == "__main__":
         title='Vergleich der minimalen und maximalen Rewards',
         xaxis_title='Kategorie',
         yaxis_title='Reward',
-        barmode='group'  # Nebeneinander statt gestapelt
+        barmode='group'
     )
     fig_min_max_reward.write_image(os.path.join(save_dir, "min_max_rewards_comparison.png"))
     fig_min_max_reward.show()
 
-    # Optional: Weitere Plots oder Metriken hinzufügen
-
-    print("Alle Vergleichsmetriken wurden geplottet und im Verzeichnis 'diagrams' gespeichert.")
+    print("Done")

@@ -8,8 +8,6 @@ from stable_baselines3.common.vec_env import DummyVecEnv
 from stable_baselines3.common.callbacks import EvalCallback, CheckpointCallback, BaseCallback
 
 from vector_env.agents.reward1.flappy_vector_env import FlappyBirdEnv
-# from stable_baselines3.common.vec_env import VecTransposeImage  # Falls gebraucht für Bildobservations
-
 
 class DetailedMetricsCallback(BaseCallback):
     """
@@ -27,12 +25,11 @@ class DetailedMetricsCallback(BaseCallback):
     """
     def __init__(self, verbose=0):
         super(DetailedMetricsCallback, self).__init__(verbose)
-        # Listen zur Zwischenspeicherung für jedes Episodenende
         self.episode_rewards = []
         self.episode_td_errors = []
         self.episode_q_values = []
-        self.episode_actions = []   # neu: für die Aktionsverteilung
-        self.episode_losses = []    # optional: wenn du Loss-Informationen speicherst
+        self.episode_actions = []
+        self.episode_losses = []
 
         # Für Episodenlänge und Zeitmessung
         self.current_episode_length = 0
@@ -52,31 +49,31 @@ class DetailedMetricsCallback(BaseCallback):
         Wird nach jedem Umgebungs-Schritt aufgerufen.
         Hier sammeln wir Step-bezogene Daten. Sobald 'done=True', loggen wir die Episode.
         """
-        # 1) Rewards
+        # Rewards
         if "rewards" in self.locals:
             rewards = self.locals["rewards"]
             self.episode_rewards.extend(rewards)
 
-        # 2) TD-Error (nur wenn du es manuell in self.locals speicherst)
+        # TD-Error (nur wenn du es manuell in self.locals speicherst)
         if "td_error" in self.locals:
             td_error = self.locals["td_error"].detach().cpu().numpy()
             if td_error.ndim == 0:
                 td_error = [td_error]
             self.episode_td_errors.extend(td_error)
 
-        # 3) Q-Values (nur wenn du sie manuell in self.locals speicherst)
+        # Q-Values (nur wenn du sie manuell in self.locals speicherst)
         if "q_values" in self.locals:
             q_values = self.locals["q_values"].detach().cpu().numpy()
             if q_values.ndim == 0:
                 q_values = [q_values]
             self.episode_q_values.extend(q_values)
 
-        # 4) Actions (zur Analyse der Verteilung)
+        # Actions (zur Analyse der Verteilung)
         if "actions" in self.locals:
             actions = self.locals["actions"]
             self.episode_actions.extend(actions)
 
-        # 5) (Optional) Loss
+        # Loss
         if "loss" in self.locals:
             loss_val = self.locals["loss"]
             # Falls es ein Tensor ist, in numpy konvertieren

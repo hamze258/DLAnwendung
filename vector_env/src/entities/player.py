@@ -45,32 +45,32 @@ class Player(Entity):
             self.reset_vals_crash()
 
     def reset_vals_normal(self) -> None:
-        self.vel_y = -9  # player's velocity along Y axis
-        self.max_vel_y = 10  # max vel along Y, max descend speed
-        self.min_vel_y = -8  # min vel along Y, max ascend speed
-        self.acc_y = 1  # players downward acceleration
+        self.vel_y = -9
+        self.max_vel_y = 10
+        self.min_vel_y = -8
+        self.acc_y = 1
 
-        self.rot = 80  # player's current rotation
-        self.vel_rot = -3  # player's rotation speed
-        self.rot_min = -90  # player's min rotation angle
-        self.rot_max = 20  # player's max rotation angle
+        self.rot = 80
+        self.vel_rot = -3
+        self.rot_min = -90
+        self.rot_max = 20 
 
-        self.flap_acc = -9  # players speed on flapping
-        self.flapped = False  # True when player flaps
+        self.flap_acc = -9 
+        self.flapped = False
 
     def reset_vals_shm(self) -> None:
-        self.vel_y = 1  # player's velocity along Y axis
-        self.max_vel_y = 4  # max vel along Y, max descend speed
-        self.min_vel_y = -4  # min vel along Y, max ascend speed
-        self.acc_y = 0.5  # players downward acceleration
+        self.vel_y = 1
+        self.max_vel_y = 4
+        self.min_vel_y = -4
+        self.acc_y = 0.5
 
-        self.rot = 0  # player's current rotation
-        self.vel_rot = 0  # player's rotation speed
-        self.rot_min = 0  # player's min rotation angle
-        self.rot_max = 0  # player's max rotation angle
+        self.rot = 0
+        self.vel_rot = 0
+        self.rot_min = 0
+        self.rot_max = 0 
 
-        self.flap_acc = 0  # players speed on flapping
-        self.flapped = False  # True when player flaps
+        self.flap_acc = 0 
+        self.flapped = False
 
     def reset_vals_crash(self) -> None:
         self.acc_y = 2
